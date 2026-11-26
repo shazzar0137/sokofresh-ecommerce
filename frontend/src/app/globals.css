@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+/*
+ * SokoFresh design tokens.
+ *
+ * Source: assets/design-references/Soko Fresh – Kenyan grocery store.pdf and .fig
+ * (desktop frame 1440 px, mobile frame 390 px). Colours were read from the PDF's
+ * shapes and rendered pixels; typefaces and weights from the Figma file.
+ * Full table with where each token is used: frontend/documentation/design-system/DESIGN_TOKENS.md
+ *
+ * Tailwind v4 turns every `--color-*`, `--font-*`, `--text-*`, `--radius-*` variable in
+ * @theme into utility classes, e.g. `bg-brand`, `text-ink-muted`, `rounded-card`.
+ */
+
+@theme {
+  /* ---------- Colour: core palette (design) ---------- */
+  --color-ink: #16130f; /* text, top bar, footer, dark meal-kit card, borders */
+  --color-cream: #fbf8f1; /* page background */
+  --color-tint: #f2ecdd; /* catalogue band, reason cards, ETA pill, plate rim */
+  --color-line: #e6dfd0; /* dividers, quiet borders */
+  --color-ink-muted: #6b6459; /* secondary text: origins, subtitles */
+  --color-card: #ffffff; /* product card body, inputs */
+  --color-brand: #0c6b3f; /* primary actions, trust band, "Soko" in logo */
+  --color-brand-foreground: #ffffff;
+  --color-accent: #b8262b; /* cart button, discount badge, low stock, "Fresh" in logo */
+  --color-accent-foreground: #ffffff;
+  --color-gold: #f0a30a; /* "Picked 5am today" sticker */
+  --color-gold-foreground: #16130f;
+
+  /* ---------- Colour: semantic (map to the palette) ---------- */
+  --color-background: var(--color-cream);
+  --color-foreground: var(--color-ink);
+  --color-surface: var(--color-card);
+  --color-surface-muted: var(--color-tint);
+  --color-border: var(--color-line);
+  --color-border-strong: var(--color-ink);
+  --color-price: var(--color-ink);
+  --color-price-was: var(--color-ink-muted);
+  --color-discount: var(--color-accent);
+  --color-stock-low: var(--color-accent);
+  --color-success: var(--color-brand);
+  --color-danger: var(--color-accent);
+  --color-focus: var(--color-ink); /* focus ring on light surfaces */
+  --color-focus-on-dark: var(--color-cream); /* focus ring inside .surface-dark (top bar, footer) */
+
+  /* ---------- Colour: product photo tiles (design pastels) ---------- */
+  --color-tile-green: #cfe8d3; /* sukuma */
+  --color-tile-rose: #f6cfc8; /* tomatoes */
+  --color-tile-lilac: #ecd0e6; /* onions */
+  --color-tile-lime: #dcebc4; /* cabbage */
+  --color-tile-mango: #fbe3a6; /* mangoes */
+  --color-tile-avocado: #d6e6b8; /* avocados */
+  --color-tile-lemon: #fbeeaa; /* bananas */
+  --color-tile-maize: #f7e3b0; /* maize flour */
+  --color-tile-rice: #ece6d8; /* rice */
+  --color-tile-wheat: #f1e1c4; /* wheat flour */
+  --color-tile-sky: #e3eef7; /* milk */
+  --color-tile-shell: #f4e8d4; /* eggs */
+  --color-tile-lake: #cfe3ee; /* tilapia */
+  --color-tile-peach: #f3d6bd; /* chicken */
+  --color-tile-mint: #d7e9cf; /* tea */
+
+  /* ---------- Typography ---------- */
+  /* Bricolage Grotesque ExtraBold for display and headings; Figtree for everything else. */
+  --font-display: var(--font-bricolage), "Arial Black", system-ui, sans-serif;
+  --font-sans: var(--font-figtree), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Fluid sizes: mobile value (390 px frame) → desktop value (1440 px frame). */
+  --text-display: clamp(2.75rem, 1.7rem + 4.3vw, 4.5rem); /* 44 → 72 hero */
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.02em;
+  --text-h1: clamp(2rem, 1.7rem + 1.3vw, 2.75rem); /* 32 → 44 section titles */
+  --text-h1--line-height: 1.1;
+  --text-h1--letter-spacing: -0.01em;
+  --text-h2: clamp(1.625rem, 1.5rem + 0.4vw, 1.875rem); /* 26 → 30 meal-kit titles */
+  --text-h2--line-height: 1.15;
+  --text-h3: clamp(1.1875rem, 1.15rem + 0.15vw, 1.3125rem); /* 19 → 21 reason titles */
+  --text-h3--line-height: 1.25;
+  --text-product: clamp(1rem, 0.9rem + 0.35vw, 1.1875rem); /* 16 → 19 product names */
+  --text-product--line-height: 1.25;
+  --text-lead: clamp(1rem, 0.93rem + 0.3vw, 1.1875rem); /* 16 → 19 hero paragraph */
+  --text-lead--line-height: 1.45;
+  --text-sub: clamp(0.9375rem, 0.9rem + 0.15vw, 1.0625rem); /* 15 → 17 section subtitles */
+  --text-sub--line-height: 1.45;
+  --text-body: 1rem; /* 16 */
+  --text-body--line-height: 1.5;
+  --text-small: 0.875rem; /* 14: origins, top bar, footer */
+  --text-small--line-height: 1.4;
+  --text-caption: 0.8125rem; /* 13: "Only 9 left today" */
+  --text-caption--line-height: 1.35;
+  --text-micro: 0.75rem; /* 12: discount badge */
+  --text-micro--line-height: 1.2;
+
+  /* ---------- Shape ---------- */
+  --radius-control: 0.5rem; /* 8 px: buttons, selects, inputs (design: Start shopping, Add) */
+  --radius-card: 0.875rem; /* 14 px: product and reason cards */
+  --radius-panel: 1.125rem; /* 18 px: meal-kit cards, testimonial */
+  --radius-pill: 9999px; /* search, cart, category tabs, badges */
+
+  /* ---------- Layout ---------- */
+  --container-page: 80rem; /* 1280 px content width inside the 1440 px frame */
+  --breakpoint-xs: 22.5rem; /* 360 px: smallest supported phone (NFR-03) */
+
+  /* ---------- Elevation ---------- */
+  --shadow-card: 0 1px 2px rgb(22 19 15 / 0.06), 0 1px 1px rgb(22 19 15 / 0.04);
+  --shadow-overlay: 0 12px 32px rgb(22 19 15 / 0.18);
+}
+
+@layer base {
+  html {
+    /* Respect the user's text size; never lock zoom. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-wrap: balance;
+  }
+
+  /* One visible, high-contrast focus style for keyboard users (WCAG 2.4.7 / 2.4.11). */
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .surface-dark :focus-visible {
+    outline-color: var(--color-focus-on-dark);
+  }
+
+  /* Keep focused elements clear of the sticky header (WCAG 2.4.11 Focus Not Obscured). */
+  html {
+    scroll-padding-top: 6rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
