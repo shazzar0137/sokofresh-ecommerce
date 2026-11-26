@@ -23,7 +23,7 @@ if not ALLOWED_HOSTS:
 if (
     len(SECRET_KEY) < 50
     or len(set(SECRET_KEY)) < 5
-    or SECRET_KEY.startswith(("dev-only", "test-only", "django-insecure"))
+    or SECRET_KEY.lower().startswith(("dev-only", "test-only", "django-insecure"))
 ):
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must be a long, random production value.")
 
@@ -35,7 +35,7 @@ if not re.fullmatch(r"[a-z0-9][a-z0-9-]{5,}/", ADMIN_URL) or "admin" in ADMIN_UR
     )
 
 try:
-    _sms_backend = import_string(SMS_BACKEND.strip())
+    _sms_backend = import_string(SMS_BACKEND)
 except ImportError as exc:
     raise ImproperlyConfigured(f"SMS_BACKEND cannot be imported: {SMS_BACKEND!r}") from exc
 if getattr(_sms_backend, "dev_only", True):
@@ -45,6 +45,8 @@ if getattr(_sms_backend, "dev_only", True):
 # Django. Wrong values either let clients spoof their IP or make all users share
 # one IP for rate limits, so there is no default.
 TRUSTED_PROXY_COUNT = env.int("DJANGO_TRUSTED_PROXY_COUNT")
+if TRUSTED_PROXY_COUNT < 0:
+    raise ImproperlyConfigured("DJANGO_TRUSTED_PROXY_COUNT must be 0 or more.")
 ALLAUTH_TRUSTED_PROXY_COUNT = TRUSTED_PROXY_COUNT
 REST_FRAMEWORK = {**REST_FRAMEWORK, "NUM_PROXIES": TRUSTED_PROXY_COUNT}  # noqa: F405
 

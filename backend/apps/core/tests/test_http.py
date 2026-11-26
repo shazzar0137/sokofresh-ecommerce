@@ -81,3 +81,12 @@ def test_only_port_443_unless_listed(settings):
     outbound_client("https://sandbox.example-provider.test:8443").close()
     with pytest.raises(OutboundHostNotAllowed):
         outbound_client(ALLOWED)
+
+
+@pytest.mark.parametrize(
+    "override", [{"verify": False}, {"proxy": "http://p"}, {"trust_env": True}]
+)
+def test_tls_and_proxy_settings_cannot_be_weakened(override):
+    """RSEC-5 (minor): no turning off certificate checks or routing via a proxy."""
+    with pytest.raises(TypeError):
+        outbound_client(ALLOWED, **override)

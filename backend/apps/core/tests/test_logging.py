@@ -94,3 +94,39 @@ def test_configured_handlers_redact_real_log_output():
 def test_outbound_request_urls_are_not_logged_at_info():
     """SEC-11: httpx logs full URLs (which may carry tokens) at INFO."""
     assert logging.getLogger("httpx").getEffectiveLevel() >= logging.WARNING
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "code" + " " * 20000,
+        "code" + ":" * 20000,
+        "+254" + " " * 20000,
+        "0" * 50000,
+        "a_" * 30000 + "code 1",
+    ],
+)
+def test_redaction_time_grows_linearly(text):
+    """RSEC-4: no catastrophic backtracking."""
+    import time
+
+    start = time.perf_counter()
+    redact(text)
+    assert time.perf_counter() - start < 0.2
+
+
+@pytest.mark.parametrize(
+    "text", ["verification_code=123456", "login_code: 123456", "passcode 123456", "code-123456"]
+)
+def test_code_names_and_separators(text):
+    assert "123456" not in redact(text)
+
+
+def test_words_containing_code_are_left_alone():
+    assert redact("barcode 12345678") == "barcode 12345678"
+
+
+def test_very_long_messages_are_truncated():
+    from apps.core.logging import MAX_LOG_CHARS
+
+    assert len(redact("x" * (MAX_LOG_CHARS * 2))) < MAX_LOG_CHARS + 100

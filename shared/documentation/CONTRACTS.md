@@ -23,9 +23,10 @@ _Created 2026-11-26 (Phase 3, Backend). For the Frontend conversation and the Pr
 
 | # | Point | Detail |
 |---|---|---|
-| F-1 | Error format | RFC 9457 with a stable `code` and a flat `errors` list (dotted field paths, `null` for whole-request errors). Validation errors are **422**. See `backend/documentation/api/API.md` |
+| F-1 | Error format | RFC 9457 with a stable `code` (published as an **enum** in the contract, so it becomes a TypeScript union) and a flat `errors` list (dotted field paths, `null` for whole-request errors). Validation errors are **422**; not signed in is **401**; CSRF problems are `csrf_failed`. See `backend/documentation/api/API.md` |
 | F-2 | Sign-in endpoints are not in this file | They are allauth headless (`/_allauth/browser/v1/…`), documented by allauth. Errors there use allauth's format |
 | F-3 | Phone numbers to allauth must be E.164 | allauth rejects `07…` forms (`invalid_phone`); the frontend normaliser (FE-32) converts first. The shared list `shared/test-fixtures/phone-numbers.json` defines accepted inputs and their E.164 results for both test suites |
 | F-4 | Login codes | 6 digits, valid 5 minutes, 3 attempts; over the request limit allauth returns 400 `too_many_login_attempts` |
 | F-5 | No trailing slashes on `/api/v1/` paths | e.g. `/api/v1/health` |
+| F-7 | Sign-up, staff, phone change | Sign-up is closed until Phase 5 (403 for every number). Staff accounts cannot sign in with a code. `…/account/phone` is not available (404) |
 | F-6 | CSRF | Get the `csrftoken` cookie from `GET /_allauth/browser/v1/config` and send it as `X-CSRFToken` on every POST/PUT/PATCH/DELETE (same-origin via Next.js rewrites, ADR-0011 item 3) |

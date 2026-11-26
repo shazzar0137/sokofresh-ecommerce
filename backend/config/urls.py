@@ -11,12 +11,22 @@ from django.urls import include, path
 
 from apps.core.views import not_found
 
+DISABLED_ALLAUTH_ROUTES = (
+    "account/phone",
+    "account/email",
+    "account/password/change",
+    "auth/email/verify",
+    "auth/email/verify/resend",
+    "auth/password/request",
+    "auth/password/reset",
+)
+
 urlpatterns = [
     path("api/v1/", include("config.api_v1")),
-    # Changing the account phone number is not offered yet: it would let a
-    # signed-in user trigger verification SMS to any number (finding SEC-8).
-    # This route shadows allauth's until the feature is designed (Phase 5).
-    path("_allauth/browser/v1/account/phone", not_found),
+    # allauth features SokoFresh does not offer yet are shadowed (404), so they
+    # cannot be used to send SMS/email to arbitrary addresses or reset staff
+    # passwords (findings SEC-8, RSEC-3). Revisit when each is designed.
+    *[path(f"_allauth/browser/v1/{route}", not_found) for route in DISABLED_ALLAUTH_ROUTES],
     path("_allauth/", include("allauth.headless.urls")),
     path(settings.ADMIN_URL, admin.site.urls),
 ]

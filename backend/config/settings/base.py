@@ -18,11 +18,9 @@ REPO_DIR = BASE_DIR.parent
 
 env = environ.Env()
 
-# A local backend/.env file is read only when present (development). Hosting
-# platforms set real environment variables instead; .env is git-ignored.
-ENV_FILE = BASE_DIR / ".env"
-if ENV_FILE.is_file():
-    environ.Env.read_env(ENV_FILE)
+# backend/.env (development only) is read by config/settings/_env.py, which
+# dev.py and test.py import first. Production reads only real environment
+# variables (re-review finding RQA-3).
 
 # --- Core -------------------------------------------------------------------
 
@@ -31,7 +29,8 @@ DEBUG = False
 ALLOWED_HOSTS: list[str] = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    # Django admin with the "password sign-in on the admin page" rule (apps/core/admin_site.py).
+    "apps.core.admin_site.SokoFreshAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -105,12 +104,16 @@ DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = env.bool(
 # `manage.py createcachetable` at deploy time.
 # The table is created by migration core.0001. Django's default limit (300
 # entries) let a burst of throttle keys evict the sign-in rate-limit counters
-# (review findings PERF-1 / DB-2), so the limit is set far above expected use.
+# (review findings PERF-1 / DB-2), so the limit is set far above normal use.
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": "sokofresh_cache",
-        "OPTIONS": {"MAX_ENTRIES": 1_000_000, "CULL_FREQUENCY": 4},
+        # 100,000 rows (~40 MB) keeps the per-write COUNT(*) cheap and the table
+        # small on Neon; expired rows are removed by `manage.py purge_expired_cache`
+        # (run by host cron, ADR-0011 item 9). Residual risk: a flood from many
+        # IPs can still evict counters; Turnstile (Phase 5) closes it (KI-012).
+        "OPTIONS": {"MAX_ENTRIES": 100_000, "CULL_FREQUENCY": 4},
     }
 }
 
@@ -230,7 +233,7 @@ TASKS = {"default": {"BACKEND": "django_tasks_db.DatabaseBackend"}}
 
 # Dotted path of the SMS backend. Production refuses development backends
 # (see prod.py). The Africa's Talking backend arrives in Phase 5.
-SMS_BACKEND = env("SMS_BACKEND", default="apps.notifications.sms.DisabledSmsBackend")
+SMS_BACKEND = env("SMS_BACKEND", default="apps.notifications.sms.DisabledSmsBackend").strip()
 
 # --- Outbound HTTP (SSRF protection: only these hosts may be called) -----------
 

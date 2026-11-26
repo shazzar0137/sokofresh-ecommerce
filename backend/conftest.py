@@ -26,15 +26,26 @@ def _clear_sms_outbox():
 
 
 @pytest.fixture(autouse=True)
-def _clear_cache(django_db_setup, django_db_blocker):
-    """Rate-limit counters live in the (database) cache; reset them between tests."""
+def _clear_cache(request):
+    """Rate-limit counters live in the (database) cache; reset them between tests.
+
+    Only for tests that use the test database: otherwise no test database exists
+    and clearing would hit the real DATABASE_URL (re-review finding RQA-1).
+    """
+    uses_db = request.node.get_closest_marker("django_db") or {
+        "db",
+        "transactional_db",
+        "django_db_reset_sequences",
+    } & set(request.fixturenames)
+    if not uses_db:
+        yield
+        return
     from django.core.cache import cache
 
-    with django_db_blocker.unblock():
-        cache.clear()
+    request.getfixturevalue("db")
+    cache.clear()
     yield
-    with django_db_blocker.unblock():
-        cache.clear()
+    cache.clear()
 
 
 @pytest.fixture

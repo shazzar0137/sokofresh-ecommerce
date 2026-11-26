@@ -64,10 +64,9 @@ In Notepad, set `DATABASE_URL` to your connection string from step 2, then save 
 
 ```powershell
 uv run python manage.py migrate
-uv run python manage.py createcachetable
 ```
 
-`migrate` creates every table, including the custom user table and the four role groups. `createcachetable` creates the table that stores rate-limit counters.
+`migrate` creates every table, including the custom user table, the four role groups and the table that stores rate-limit counters.
 
 ## 6. Run the server
 
@@ -87,7 +86,7 @@ Stop the server with **Ctrl+C**.
 uv run python manage.py createsuperuser
 ```
 
-Enter a Kenyan mobile number (for example `0712345678`) and a password of at least 12 characters. Then open http://127.0.0.1:8000/admin/ and sign in with the phone number and password. (Production uses a secret admin path, set by `DJANGO_ADMIN_URL`.)
+Enter a Kenyan mobile number (for example `0712345678`) and a password of at least 12 characters. Then open http://127.0.0.1:8000/admin/ and sign in with the phone number (any format, e.g. `0712 345 678`) and password. Staff accounts cannot use SMS-code sign-in; that is for customers only. (Production uses a secret admin path, set by `DJANGO_ADMIN_URL`.)
 
 ## 8. Sign in with a phone code (development)
 
@@ -119,5 +118,5 @@ Commit the updated `shared/contracts/openapi.yaml` together with the code change
 | `Set the DATABASE_URL environment variable` | `backend\.env` is missing or has no `DATABASE_URL` (step 4) |
 | `connection refused` / `could not connect to server` | PostgreSQL isn't running (Option B: open **Services**, start **postgresql-x64-…**), or the connection string is wrong |
 | `permission denied to create database` (tests) | The database user needs `CREATEDB` (step 2, Option B) |
-| `relation "sokofresh_cache" does not exist` | Run `uv run python manage.py createcachetable` |
+| `relation "sokofresh_cache" does not exist` | Run `uv run python manage.py migrate` |
 | `uv` is not recognised | Close and reopen PowerShell after installing uv |

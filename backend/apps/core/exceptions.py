@@ -173,7 +173,8 @@ def problem_details_exception_handler(exc: Exception, context: dict[str, Any]) -
         detail = "The request body is not valid JSON."
     elif isinstance(exc, exceptions.PermissionDenied) and str(exc.detail).startswith("CSRF Failed"):
         code = "csrf_failed"
-        detail = "Send the CSRF token in the X-CSRFToken header."
+        logger.warning("CSRF check failed: %s", exc.detail)
+        detail = "The security check failed. Reload the page and try again."
     else:
         raw = exc.detail if isinstance(exc, exceptions.APIException) else str(exc)
         detail = str(raw) if not isinstance(raw, (dict, list)) else "Request failed."

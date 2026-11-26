@@ -56,3 +56,22 @@ def test_committed_contract_matches_the_code(generated):
     assert CONTRACT.read_text(encoding="utf-8") == generated, (
         "shared/contracts/openapi.yaml is out of date; regenerate it (see module docstring)"
     )
+
+
+def test_every_code_the_code_can_emit_is_published():
+    """RQA-7: codes used in exceptions.py and views.py are all in PROBLEM_CODES."""
+    import re
+    from pathlib import Path
+
+    from apps.core import exceptions
+
+    used = {code for _, code in exceptions._CODE_BY_EXCEPTION}
+    core = Path(exceptions.__file__).parent
+    pattern = (
+        r"(?:code = |_problem_json\(\s*\d+, |problem_response\(\s*\d+, |problem\(\d+, )"
+        r'"([a-z_]+)"'
+    )
+    for name in ("exceptions.py", "views.py"):
+        used |= set(re.findall(pattern, (core / name).read_text()))
+    assert used, "pattern found no codes"
+    assert used <= set(exceptions.PROBLEM_CODES), used - set(exceptions.PROBLEM_CODES)

@@ -8,26 +8,39 @@ proposal §9). Two layers:
 - RedactingFormatter redacts the complete formatted output, including
   tracebacks and stack traces (review findings ARCH-5 / SEC-4).
 
-This is a safety net: code should still avoid logging these values.
+The patterns use only bounded repetition, so their running time grows linearly
+with the text (re-review finding RSEC-4: an unbounded pattern let a crafted
+8 KB header take seconds to log). Very long texts are cut to MAX_LOG_CHARS.
+
+This is a safety net, not a guarantee: code must still avoid logging these values.
+Known limits: digits separated one by one ("1 2 3 4 5 6") and nine-digit numbers
+without a prefix are not recognised; some ordinary numbers that look like phone
+numbers or codes are masked too (privacy wins over log detail).
 """
 
 import logging
 import re
 
+MAX_LOG_CHARS = 64 * 1024
+
+_SEP = r"[\s.\-()]{0,3}"
 # Kenyan mobiles: +254 / 254 / (+254) / 0, optional "(0)", then 7XX or 1XX and six
-# more digits, with optional spaces, dots, dashes or brackets between groups.
-_SEP = r"[\s.\-()]*"
+# more digits, with up to three spaces, dots, dashes or brackets between groups.
 _PHONE_RE = re.compile(
-    rf"(?<![\d+])(?:\(?\+?254\)?{_SEP}(?:\(0\){_SEP})?|0)([17]\d{{2}}){_SEP}(\d{{3}}){_SEP}(\d{{3}})(?!\d)"
+    rf"(?<![\d+])(?:\(?\+?254\)?{_SEP}(?:\(0\){_SEP})?|0)"
+    rf"([17]\d{{2}}){_SEP}(\d{{3}}){_SEP}(\d{{3}})(?!\d)"
 )
-# "code 123456", "code: 123456", "code is 123456", "otp=123456", "token 123456",
-# and JSON/dict forms: "code": "123456", 'code': '123456'.
+# A code word (also inside names like verification_code or login_code), then up
+# to a few separators (spaces, quotes, ":", "=", "-", "is"), then 4-8 digits.
 _CODE_RE = re.compile(
-    r"""(?i)(["']?\b(?:code|otp|pin|token)\b["']?)(\s*(?:is|:|=)?\s*["']?)\d{4,8}\b"""
+    r"(?i)(?<![a-z])((?:pass)?code|otp|pin|token)(?![a-z])"
+    r"([\"'\s:=\-]{0,6}(?:is[\"'\s:=\-]{1,6})?)\d{4,8}(?!\d)"
 )
 
 
 def redact(text: str) -> str:
+    if len(text) > MAX_LOG_CHARS:
+        text = text[:MAX_LOG_CHARS] + " …[log message truncated]"
     text = _PHONE_RE.sub(lambda m: f"+254{m.group(1)[0]}*****{m.group(3)}", text)
     return _CODE_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}[redacted]", text)
 

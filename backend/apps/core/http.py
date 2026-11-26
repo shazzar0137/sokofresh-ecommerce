@@ -17,7 +17,16 @@ import httpx
 from django.conf import settings
 
 DEFAULT_HEADERS = {"User-Agent": "SokoFresh-backend/0.1"}
-_FORBIDDEN_KWARGS = {"follow_redirects", "event_hooks", "transport", "mounts", "base_url"}
+_FORBIDDEN_KWARGS = {
+    "follow_redirects",
+    "event_hooks",
+    "transport",
+    "mounts",
+    "base_url",
+    "verify",  # TLS certificate checks stay on
+    "proxy",
+    "trust_env",  # ignore HTTP(S)_PROXY-style environment variables
+}
 
 
 class OutboundHostNotAllowed(Exception):
@@ -67,5 +76,6 @@ def outbound_client(
         follow_redirects=False,
         headers={**DEFAULT_HEADERS, **(headers or {})},
         event_hooks={"request": [_enforce_allow_list]},
+        trust_env=False,
         **kwargs,
     )

@@ -1,6 +1,6 @@
 # API: conventions and contract (as implemented)
 
-_Updated 2026-11-26 (Phase 3). Describes what exists in the code. The planned endpoint inventory is in `../architecture/BACKEND_ANALYSIS_2026-11.md` §4 (with amendments B-6, B-16)._
+_Updated 2026-11-26 (Phase 3, after the independent review: `../quality/BACKEND_REVIEW_REPORT.md`). Describes what exists in the code. The planned endpoint inventory is in `../architecture/BACKEND_ANALYSIS_2026-11.md` §4 (with amendments B-6, B-16)._
 
 ## Contract
 
@@ -28,17 +28,17 @@ API URLs have **no trailing slash** (`/api/v1/health`).
 | Topic | Rule | Where in code |
 |---|---|---|
 | Format | JSON only; `snake_case` field names | `REST_FRAMEWORK` in `config/settings/base.py` |
-| Authentication | Django session cookie (set by allauth) + CSRF token header on writes | `SessionAuthentication` |
+| Authentication | Django session cookie (set by allauth) + CSRF token header on writes. Not signed in → **401** with `WWW-Authenticate: Session realm="api"` | `apps/core/authentication.py` |
 | Permissions | **Deny by default** (`IsAuthenticated`); public endpoints opt in with `AllowAny` | base settings |
 | Pagination | `?page=2&page_size=24`, `page_size` ≤ 100; response `{count, next, previous, results}` | `apps/core/pagination.py` |
-| Rate limits | 120 requests/min anonymous, 240/min signed in (shared database cache); stricter limits on sign-in codes | base settings |
+| Rate limits | 120 requests/min anonymous, 240/min signed in (shared database cache); stricter limits on sign-in codes. Client IP is read from `X-Forwarded-For` only past `DJANGO_TRUSTED_PROXY_COUNT` proxies (0 in development: the header is ignored) | base settings |
 | Errors | RFC 9457 problem details (below) | `apps/core/exceptions.py` |
 | Money | Integer KES (`price_kes: 120`) | from Phase 4 |
 | Idempotency | `Idempotency-Key` header on order and payment requests | from Phase 6 |
 
 ## Errors (RFC 9457)
 
-Every error from `/api/v1/` (and unknown URLs) has `Content-Type: application/problem+json`:
+Every error from `/api/v1/` and `/_allauth/` paths that Django itself produces (unknown URLs, bad Host header, CSRF failure, server errors) and every DRF error has `Content-Type: application/problem+json`. Other paths (Django admin) keep Django's HTML error pages. With `DEBUG=True` (development) Django shows its debug pages for unknown URLs instead.
 
 ```json
 {
@@ -56,16 +56,22 @@ Every error from `/api/v1/` (and unknown URLs) has `Content-Type: application/pr
 
 | HTTP | `code` | When |
 |---|---|---|
-| 400 | `malformed_request` | Body is not valid JSON |
+| 400 | `malformed_request` | Body is not valid JSON (fixed message; parser details are not shown) |
+| 400 | `bad_request` | Request rejected before reaching the API (e.g. bad `Host` header) |
 | 401 | `not_authenticated` / `authentication_failed` | Sign-in needed / failed |
 | 403 | `permission_denied` | Signed in but not allowed |
+| 403 | `csrf_failed` | CSRF token missing or wrong: send `X-CSRFToken` |
+| 406 | `not_acceptable` | `Accept` header excludes JSON |
 | 404 | `not_found` | No such resource (also used for other customers' objects) |
 | 405 | `method_not_allowed` | Wrong HTTP method |
 | 415 | `unsupported_media_type` | Not JSON |
-| 422 | `validation_error` | Field errors in `errors` (dotted paths; `null` = whole request) |
+| 422 | `validation_error` | Field errors in `errors` (dotted paths; `null` = whole request). Also used for Django model validation errors raised in a view |
 | 429 | `rate_limited` | Too many requests; `Retry-After` header gives seconds |
 | 500 | `server_error` | Unexpected error; details are only in server logs |
 | 503 | `service_unavailable` | Health check: database unreachable |
+| any | `error` | Fallback for an unexpected API exception type |
+
+The complete list is published as an enum on `ProblemDetail.code` in the contract (from `PROBLEM_CODES` in `apps/core/exceptions.py`); a new code must be added there.
 
 The frontend should switch on `code`, not on `title` or `detail` (wording may change).
 
@@ -73,11 +79,11 @@ The frontend should switch on `code`, not on `title` or `detail` (wording may ch
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/api/v1/health` | Public | Liveness + database check: `{"status": "ok", "database": "ok"}`; 503 problem if the database is down |
+| GET | `/api/v1/health` | Public, **not rate limited** | Liveness + database check (one `SELECT 1`, no cache or session work): `{"status": "ok", "database": "ok"}`; 503 problem if the database is down |
 
 ## Sign-in (allauth headless, ADR-0005)
 
-Phase 3 configures sign-in for **existing** accounts by phone + one-time code. Creating accounts during checkout comes in Phase 5 (ADR-0011 item 5).
+Phase 3 configures sign-in for **existing customer** accounts by phone + one-time code. **Sign-up is closed** (`ACCOUNT_SIGNUP_OPEN = False`: `POST …/auth/signup` returns 403 for every number) until account creation at checkout is built in Phase 5 (ADR-0011 item 5). **Staff and admin accounts cannot sign in with a code** (the confirm step returns allauth's normal 401 "not signed in"); they use the Django admin login with their password. **Changing the account phone number** (`…/account/phone`) is not available yet (404).
 
 | Step | Request | Response |
 |---|---|---|
@@ -89,7 +95,7 @@ Phase 3 configures sign-in for **existing** accounts by phone + one-time code. C
 
 Rules the frontend must follow:
 - **Phone numbers must be sent in E.164** (`+254…`). allauth headless rejects other forms with error code `invalid_phone`. The frontend normaliser (FE-32) converts `07…`, `01…`, `254…` and spaces first. Non-Kenyan numbers are rejected by our adapter.
-- Codes are **6 digits**, valid **5 minutes**, **3 attempts**.
+- Codes are **6 digits**, valid **5 minutes**, **3 attempts** (after 3 wrong codes the flow ends with 409; request a new code). A used code cannot be reused.
 - Limits: 3 code requests per number per 10 minutes and 10 per day; 30 per minute per IP. Over the limit: 400 with error code `too_many_login_attempts`.
 - Unknown numbers get the same "pending" response as real accounts (no account enumeration) and no SMS is sent.
 - allauth errors use **allauth's own format** (`{"status": 400, "errors": [{"message", "code", "param"}]}`), not RFC 9457. The two formats are kept separate on purpose: allauth's is part of its documented API.

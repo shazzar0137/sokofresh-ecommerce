@@ -102,5 +102,8 @@ def server_error(request: HttpRequest) -> HttpResponse:
 def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponse:
     """CSRF failures outside DRF (e.g. allauth sign-in) on API paths are JSON."""
     if _wants_json(request):
-        return _problem_json(403, "csrf_failed", "Send the CSRF token in the X-CSRFToken header.")
+        logging.getLogger("django.security.csrf").warning("CSRF check failed: %s", reason)
+        return _problem_json(
+            403, "csrf_failed", "The security check failed. Reload the page and try again."
+        )
     return django_csrf_failure(request, reason)

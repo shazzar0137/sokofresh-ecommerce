@@ -13,7 +13,6 @@ cd backend
 uv sync                                   # install the exact locked dependencies
 copy .env.example .env                    # Windows (macOS/Linux: cp); then edit DATABASE_URL
 uv run python manage.py migrate
-uv run python manage.py createcachetable
 uv run python manage.py runserver         # http://127.0.0.1:8000/api/v1/health
 uv run pytest                             # all tests (needs PostgreSQL)
 ```

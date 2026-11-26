@@ -1,10 +1,11 @@
 # gitleaks configuration: the default rules, plus a narrow allow list for the
 # fictional development/test values that are deliberately in the repository
-# (review finding QA-8). Never add a real secret pattern here.
+# (review findings QA-8, RQA-5). Never add a real secret pattern here.
+# Format: gitleaks v8.25+ ([[allowlists]]). Not yet verified by a real run (KI-008).
 [extend]
 useDefault = true
 
-[allowlist]
+[[allowlists]]
 description = "Fictional development, test and CI values (not secrets)"
 regexes = [
   '''dev-only-insecure-key-not-for-production-use-0123456789abcdef''',

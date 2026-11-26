@@ -48,7 +48,7 @@ def run_manage(*args: str, env_overrides: dict[str, str]) -> subprocess.Complete
 
 
 def test_the_ten_apps_are_installed_in_order():
-    installed = [a for a in settings.INSTALLED_APPS if a.startswith("apps.")]
+    installed = [a for a in settings.INSTALLED_APPS if a.startswith("apps.") and a.count(".") == 1]
     assert installed == TEN_APPS
 
 
@@ -103,6 +103,12 @@ def test_production_settings_pass_the_deploy_checklist():
             "Development SMS backends cannot be used in production",
         ),
         ({"SMS_BACKEND": "apps.nowhere.Backend"}, "SMS_BACKEND cannot be imported"),
+        (
+            {"SMS_BACKEND": " apps.notifications.sms.ConsoleSmsBackend"},
+            "Development SMS backends cannot be used in production",
+        ),
+        ({"DJANGO_SECRET_KEY": "Django-Insecure-" + "abcdef123" * 6}, "DJANGO_SECRET_KEY must be"),
+        ({"DJANGO_TRUSTED_PROXY_COUNT": "-1"}, "DJANGO_TRUSTED_PROXY_COUNT must be 0 or more"),
     ],
 )
 def test_production_refuses_unsafe_configuration(override, message):
@@ -167,3 +173,12 @@ def test_env_file_values_win_over_development_defaults(tmp_path, monkeypatch):
     assert os.environ["SOKOFRESH_TEST_ONLY_VAR"] == "from-env-file"
     assert os.environ["PATH_UNCHANGED"] == "real-environment"  # real env still wins
     monkeypatch.delenv("SOKOFRESH_TEST_ONLY_VAR")
+
+
+def test_dev_and_test_settings_read_env_file_before_defaults():
+    """RQA-3 / ARCH-4: the _env import comes before any os.environ.setdefault."""
+    for name in ("dev.py", "test.py"):
+        source = (BACKEND_DIR / "config" / "settings" / name).read_text()
+        assert source.index("from . import _env") < source.index("os.environ.setdefault")
+    base = (BACKEND_DIR / "config" / "settings" / "base.py").read_text()
+    assert "read_env" not in base  # production never reads a .env file

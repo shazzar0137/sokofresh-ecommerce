@@ -12,8 +12,12 @@ ADMIN = "/" + settings.ADMIN_URL
 
 @pytest.fixture
 def admin_client(client):
-    admin = User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
-    client.force_login(admin)
+    """Signed in the way staff really sign in: the admin login page with a password."""
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    response = client.post(
+        f"{ADMIN}login/", {"username": "0712345678", "password": "a-long-staff-password-1"}
+    )
+    assert response.status_code == 302
     return client
 
 
@@ -55,3 +59,53 @@ def test_admin_404_pages_stay_html(admin_client):
     response = admin_client.get(f"{ADMIN}no-such-page/")
     assert response.status_code == 404
     assert response["Content-Type"].startswith("text/html")
+
+
+def test_admin_needs_a_password_sign_in_on_the_admin_page(client):
+    """RSEC-1: a session from any other sign-in (e.g. SMS code) does not open admin."""
+    staff = User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    client.force_login(staff)  # like a code or API sign-in
+    assert client.get(f"{ADMIN}accounts/user/").status_code == 302
+
+
+def test_customer_promoted_to_staff_keeps_no_admin_access(client):
+    """RSEC-1: promotion does not upgrade an existing SMS-code session."""
+    import re
+
+    from apps.notifications import sms
+
+    customer = User.objects.create_user("0712345678")
+    base = "/_allauth/browser/v1"
+    client.post(
+        f"{base}/auth/code/request", {"phone": "+254712345678"}, content_type="application/json"
+    )
+    code = re.search(r"\b(\d{6})\b", sms.outbox[-1].body).group(1)
+    assert (
+        client.post(
+            f"{base}/auth/code/confirm", {"code": code}, content_type="application/json"
+        ).status_code
+        == 200
+    )
+    customer.is_staff = customer.is_superuser = True
+    customer.save()
+    assert client.get(f"{ADMIN}accounts/user/").status_code == 302
+
+
+def test_headless_password_login_does_not_open_admin(client):
+    """RSEC-1 (related): allauth's API login must not bypass the admin login page."""
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    response = client.post(
+        "/_allauth/browser/v1/auth/login",
+        {"phone": "+254712345678", "password": "a-long-staff-password-1"},
+        content_type="application/json",
+    )
+    assert response.status_code in (200, 400, 401)
+    assert client.get(f"{ADMIN}accounts/user/").status_code == 302
+
+
+def test_signing_in_elsewhere_removes_the_admin_flag(admin_client):
+    from apps.core.admin_site import ADMIN_LOGIN_SESSION_KEY
+
+    assert admin_client.session[ADMIN_LOGIN_SESSION_KEY] is True
+    admin_client.force_login(User.objects.get(phone="+254712345678"))
+    assert ADMIN_LOGIN_SESSION_KEY not in admin_client.session
