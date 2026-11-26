@@ -12,9 +12,9 @@ urlpatterns = [
 ]
 
 if settings.API_DOCS_ENABLED:
-    from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+    from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitView
 
     urlpatterns += [
         path("schema", SpectacularAPIView.as_view(), name="schema"),
-        path("docs/", SpectacularSwaggerView.as_view(url_name="api_v1:schema"), name="docs"),
+        path("docs/", SpectacularSwaggerSplitView.as_view(url_name="api_v1:schema"), name="docs"),
     ]

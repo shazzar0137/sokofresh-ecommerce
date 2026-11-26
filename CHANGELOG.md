@@ -2,6 +2,20 @@
 
 All notable changes to this project are recorded here. Newest entries first.
 
+## [Phase 3 backend foundations] - 2026-11-26 (branch `feature/phase-3-foundations`)
+
+### Added
+- Django 6.1.3 backend with uv (Python 3.13): settings split, ten apps, phone-based custom user model and role groups, allauth headless phone-code sign-in foundation, RFC 9457 errors, `GET /api/v1/health`, outbound-HTTP allow list, log redaction.
+- Generated OpenAPI contract `shared/contracts/openapi.yaml` with drift check; shared phone-number fixtures.
+- 89 backend tests (all passing on PostgreSQL); backend CI workflow (lint, tests, pip-audit, gitleaks).
+- ADR-0014; backend developer guide, API, database and security docs; `shared/documentation/CONTRACTS.md`; `PHASE_3_BACKEND_COMPLETION_REPORT.md`.
+
+### Removed
+- Empty `backend/src/` layer folders (ADR-0011 item 4).
+
+### Notes
+- Branch not yet on GitHub (KI-005): delivered as `tmp/phase-3-foundations.bundle` for the owner to push.
+
 ## [Phase 2 follow-up] - 2026-11-26 (owner answers, Google Maps)
 
 ### Added

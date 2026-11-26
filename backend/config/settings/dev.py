@@ -33,3 +33,15 @@ REST_FRAMEWORK = {
 
 # Interactive API docs at /api/v1/docs/ (development only).
 API_DOCS_ENABLED = True
+
+# Swagger UI loads its files from jsdelivr; allow that host in development only.
+# (Its start-up script is served by Django itself: SpectacularSwaggerSplitView.)
+from .base import SECURE_CSP  # noqa: E402
+
+_SWAGGER_CDN = "https://cdn.jsdelivr.net"
+SECURE_CSP = {
+    **SECURE_CSP,
+    "script-src": ["'self'", _SWAGGER_CDN],
+    "style-src": ["'self'", _SWAGGER_CDN],
+    "img-src": ["'self'", "data:", _SWAGGER_CDN],
+}

@@ -4,6 +4,10 @@ Approved decisions and significant changes, newest first. Formal technology deci
 
 | ID | Date | Decision / change | Status | Reason |
 |---|---|---|---|---|
+| D-041 | 2026-11-26 | Branch delivered to the owner as a git bundle (`tmp/phase-3-foundations.bundle`) because the session had no GitHub write access; owner pushes with own credentials | Done; owner action pending | KI-005; no token requested (Phase 3 instruction) |
+| D-040 | 2026-11-26 | Backend code layout `backend/apps/<app>/` + `backend/config/`; empty `backend/src/` layer folders removed | Done (ADR-0011 item 4, ADR-0014 #5) | Approved removal at scaffold |
+| D-039 | 2026-11-26 | Phase 3 foundation choices (custom RFC 9457 handler, 422 for validation, ruff, database cache, E.164 at allauth endpoints, code format/limits, fail-closed SMS, HSTS start, deferred packages, gitleaks tool, PostgreSQL 17 in CI) | Accepted under delegated authority; **owner to confirm** | ADR-0014 |
+| D-038 | 2026-11-26 | Owner authorised Phase 3 backend foundations, with overnight execution | Approved (owner) | Phase 3 instruction |
 | D-037 | 2026-11-26 | Removed `frontend/public/assets/` and `tests/stress/` (empty except `.gitkeep`) | Done (owner approved) | KI-001 |
 | D-036 | 2026-11-26 | Record retention: accountant check deferred to a future update; proposed conservative periods apply meanwhile | Approved (owner) | — |
 | D-035 | 2026-11-26 | KRA PIN and ODPC registration: coming soon (small business) | Fact (owner) | — |

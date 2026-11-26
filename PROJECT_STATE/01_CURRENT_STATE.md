@@ -1,6 +1,6 @@
 # 01 Current State
 
-_Last verified: 2026-11-26_
+_Last verified: 2026-11-26 (night; Phase 3 backend)_
 
 ## Verified on disk
 
@@ -16,14 +16,28 @@ _Last verified: 2026-11-26_
 | Backend design | `backend/documentation/architecture/BACKEND_ANALYSIS_2026-11.md` (accepted, amendments B-1 to B-16) |
 | Testing | `docs/testing/TESTING_STRATEGY.md` (approved) |
 | Roadmap | `docs/IMPLEMENTATION_ROADMAP.md` (approved) |
+| Git | Local repo: `main` = `origin/main` = `965e047` (verified by reading `.git`). Branch `feature/phase-3-foundations` exists in the Claude workspace and as `tmp/phase-3-foundations.bundle` in the project folder; **not yet on GitHub** (KI-005) |
+
+## Verified on branch `feature/phase-3-foundations` (not yet merged)
+
+| Item | State |
+|---|---|
+| Backend project | `backend/`: uv (Python 3.13), Django 6.1.3, DRF 3.18.3, drf-spectacular 0.30.0, allauth 65.23.0, django-tasks-db 0.13.0; `config/settings/{base,dev,test,prod}.py` |
+| Apps | Ten apps in `backend/apps/`; code in `core`, `accounts`, `notifications` only |
+| Custom user model | `accounts.User` (phone login, E.164 CHECK, optional unique email); migrations `accounts.0001`, `0002` (role groups) |
+| Sign-in | allauth headless phone + code for existing accounts; SMS: console (dev), in-memory (tests), refusing (prod) |
+| API | `GET /api/v1/health`; RFC 9457 errors; contract `shared/contracts/openapi.yaml` generated, drift-checked |
+| Tests | 89 pytest tests, **all passing** on PostgreSQL 16.15 (2026-11-26); ruff clean; pip-audit: no known vulnerabilities |
+| CI | `.github/workflows/backend-ci.yml` written; **not yet run on GitHub** |
+| Docs | backend README, developer guide, API, database, security docs; ADR-0014; `PHASE_3_BACKEND_COMPLETION_REPORT.md` |
 
 ## Not implemented (nothing below exists)
 
-- Application code of any kind; the approved stack is **on paper only**.
-- Package manifests, lockfiles, framework configuration, installed dependencies.
-- Tests of any kind.
-- Version control: the folder is **not** a git repository yet.
-- Any hosting, database instance, or third-party account set up by Claude.
+- On `main`: no application code yet (the backend foundation is on the unmerged branch).
+- Frontend application, package manifest or tests (Frontend conversation).
+- Business models and endpoints (catalogue, inventory, basket, orders, payments, delivery): Phase 4 onward.
+- Real SMS provider, account creation at checkout, staff MFA (Phase 5).
+- Any hosting, Neon database, or third-party account set up by Claude.
 
 ## Pre-existing content
 

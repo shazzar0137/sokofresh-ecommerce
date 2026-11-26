@@ -53,6 +53,7 @@ What becomes easier, what becomes harder, and any follow-up work.
 | [0011](0011-consolidated-architecture-review.md) | Consolidated architecture review: amendments | Accepted 2026-11-26 |
 | [0012](0012-payments-at-launch.md) | Pochi la Biashara at launch; Daraja sandbox; Pesapal future | Accepted 2026-11-26 |
 | [0013](0013-maps-and-location.md) | Maps and location: Google Maps Platform, fast-delivery radius | Accepted 2026-11-26 |
+| [0014](0014-backend-foundation-choices.md) | Backend foundation choices (Phase 3 scaffold) | Accepted under delegated authority 2026-11-26; owner to confirm |
 
 Phase 1 decisions are recorded in `PROJECT_STATE/02_DECISIONS_AND_CHANGES.md`.
 
