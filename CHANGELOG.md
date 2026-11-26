@@ -2,6 +2,21 @@
 
 All notable changes to this project are recorded here. Newest entries first.
 
+## [Phase 3 backend review] - 2026-11-27 (branch `feature/phase-3-foundations`)
+
+### Reviewed
+- Independent review by 6 specialist subagents and 3 re-reviewers: 100 findings (12 High = 10 distinct issues), all High fixed and re-verified. Report: `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`.
+
+### Fixed (highlights)
+- Staff can no longer sign in with an SMS code; admin requires a password sign-in on its own page.
+- Sign-up closed until Phase 5 (it crashed and revealed registered numbers).
+- Rate limits can no longer be bypassed with a spoofed `X-Forwarded-For` or reset by flooding the cache.
+- 401 for not signed in; health check not throttled; JSON errors on API paths only; linear-time log redaction covering tracebacks.
+- Tests: 89 → 211; coverage 94%.
+
+### Added
+- `apps/core/admin_site.py`, `apps/core/authentication.py`, `purge_expired_cache` command, migrations `core.0001`, `accounts.0003`, `.github/workflows/secret-scan.yml`, `.gitleaks.toml`, ADR-0014 items 13–21.
+
 ## [Phase 3 backend foundations] - 2026-11-26 (branch `feature/phase-3-foundations`)
 
 ### Added

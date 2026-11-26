@@ -1,6 +1,6 @@
 # 01 Current State
 
-_Last verified: 2026-11-26 (night; Phase 3 backend)_
+_Last verified: 2026-11-27 (Phase 3 backend after independent review)_
 
 ## Verified on disk
 
@@ -25,10 +25,11 @@ _Last verified: 2026-11-26 (night; Phase 3 backend)_
 | Backend project | `backend/`: uv (Python 3.13), Django 6.1.3, DRF 3.18.3, drf-spectacular 0.30.0, allauth 65.23.0, django-tasks-db 0.13.0; `config/settings/{base,dev,test,prod}.py` |
 | Apps | Ten apps in `backend/apps/`; code in `core`, `accounts`, `notifications` only |
 | Custom user model | `accounts.User` (phone login, E.164 CHECK, optional unique email); migrations `accounts.0001`, `0002` (role groups) |
-| Sign-in | allauth headless phone + code for existing accounts; SMS: console (dev), in-memory (tests), refusing (prod) |
+| Sign-in | allauth headless phone + code for existing **customer** accounts; sign-up closed; staff refused code sign-in; admin requires password sign-in on the admin page; unused allauth routes shadowed; SMS: console (dev), in-memory (tests), refusing (prod) |
 | API | `GET /api/v1/health`; RFC 9457 errors; contract `shared/contracts/openapi.yaml` generated, drift-checked |
-| Tests | 89 pytest tests, **all passing** on PostgreSQL 16.15 (2026-11-26); ruff clean; pip-audit: no known vulnerabilities |
-| CI | `.github/workflows/backend-ci.yml` written; **not yet run on GitHub** |
+| Tests | **211** pytest tests, **all passing** on PostgreSQL 16.15 (2026-11-27), also in random order and in parallel; coverage 94% (incl. subprocess-run production settings); ruff clean; pip-audit: no known vulnerabilities |
+| Independent review | Done 2026-11-27: `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`. All High findings fixed and re-reviewed; 4 Medium items open (KI-011, KI-012, KI-013, API-4) |
+| CI | `.github/workflows/backend-ci.yml` and `secret-scan.yml` written; **not yet run on GitHub** |
 | Docs | backend README, developer guide, API, database, security docs; ADR-0014; `PHASE_3_BACKEND_COMPLETION_REPORT.md` |
 
 ## Not implemented (nothing below exists)

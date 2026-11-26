@@ -24,6 +24,22 @@ ADR-0010 left some choices open ("verify at scaffold"), and building the foundat
 | 11 | **Secret scanning runs the MIT-licensed gitleaks tool directly in CI** (checksum-verified), not the gitleaks GitHub Action | The Action has its own commercial licence terms | Very low |
 | 12 | **CI database: PostgreSQL 17**; local development may use PostgreSQL 16+ | Neon offers 17/18 (ADR-0003); tests require 16 or newer | Very low |
 
+## Additions after the independent review (2026-11-27)
+
+Made under the same delegated authority, to fix review findings (`backend/documentation/quality/BACKEND_REVIEW_REPORT.md`). All reversible; owner to confirm.
+
+| # | Decision | Why |
+|---|---|---|
+| 13 | **Sign-up closed** (`ACCOUNT_SIGNUP_OPEN = False`) until account creation at checkout (Phase 5) | It crashed and revealed registered numbers (SEC-2) |
+| 14 | **Staff/superusers cannot sign in with an SMS code** (and no code is texted to them); **Django admin requires a password sign-in on the admin login page in the same session** (custom `AdminSite` via `AdminConfig.default_site`) | SIM-swap risk; promoted users and allauth API logins bypassed the admin page (SEC-1, RSEC-1) |
+| 15 | **`DJANGO_TRUSTED_PROXY_COUNT`** feeds DRF `NUM_PROXIES` and allauth `TRUSTED_PROXY_COUNT`; 0 by default, required in production | Spoofed `X-Forwarded-For` bypassed limits; behind a proxy all users shared one IP (ARCH-1/2) |
+| 16 | **Database cache: 100,000 rows + `purge_expired_cache` command** (host cron); tests use the same database cache | The 300-row default let counters be evicted (PERF-1). Residual flood risk accepted until Turnstile (KI-012) |
+| 17 | **allauth features not offered yet are shadowed** (phone change, email, email verification, password reset/change) | They could send SMS/email to arbitrary addresses (SEC-8, RSEC-3) |
+| 18 | **401 for "not signed in"** (`apps.core.authentication.SessionAuthentication` adds a challenge header) | Matches the documented contract (API-1) |
+| 19 | **django-allauth without the `[headless]` extra** | The extra only adds PyJWT/cryptography for token clients we do not use (DEP-1) |
+| 20 | **coverage** (and PyYAML, used by the contract test) as development dependencies | Coverage figures for the review (QA-13) |
+| 21 | **Secret scan in its own workflow** on every push, with a narrow `.gitleaks.toml` allow list | It was skipped for non-backend pushes (QA-7) |
+
 ## Consequences
 - The OpenAPI contract documents a shared `ProblemDetail` schema on every operation (`4XX`, `5XX`).
 - Deployment steps must include `createcachetable` (recorded in the developer guide).

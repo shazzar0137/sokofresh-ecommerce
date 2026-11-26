@@ -130,3 +130,11 @@ def test_very_long_messages_are_truncated():
     from apps.core.logging import MAX_LOG_CHARS
 
     assert len(redact("x" * (MAX_LOG_CHARS * 2))) < MAX_LOG_CHARS + 100
+
+
+def test_number_at_the_truncation_point_is_still_masked():
+    """R3-2: redact before cutting."""
+    from apps.core.logging import MAX_LOG_CHARS
+
+    result = redact("x" * (MAX_LOG_CHARS - 6) + "0712345678")
+    assert "071234" not in result and "712345" not in result

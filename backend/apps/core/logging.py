@@ -10,7 +10,7 @@ proposal §9). Two layers:
 
 The patterns use only bounded repetition, so their running time grows linearly
 with the text (re-review finding RSEC-4: an unbounded pattern let a crafted
-8 KB header take seconds to log). Very long texts are cut to MAX_LOG_CHARS.
+8 KB header take seconds to log). Very long texts are cut to MAX_LOG_CHARS after redaction.
 
 This is a safety net, not a guarantee: code must still avoid logging these values.
 Known limits: digits separated one by one ("1 2 3 4 5 6") and nine-digit numbers
@@ -39,10 +39,13 @@ _CODE_RE = re.compile(
 
 
 def redact(text: str) -> str:
+    # Redact first, then cut: a number straddling the cut would otherwise leak
+    # partly (re-review finding R3-2). The patterns are linear, so this is cheap.
+    text = _PHONE_RE.sub(lambda m: f"+254{m.group(1)[0]}*****{m.group(3)}", text)
+    text = _CODE_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}[redacted]", text)
     if len(text) > MAX_LOG_CHARS:
         text = text[:MAX_LOG_CHARS] + " …[log message truncated]"
-    text = _PHONE_RE.sub(lambda m: f"+254{m.group(1)[0]}*****{m.group(3)}", text)
-    return _CODE_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}[redacted]", text)
+    return text
 
 
 class RedactPersonalDataFilter(logging.Filter):

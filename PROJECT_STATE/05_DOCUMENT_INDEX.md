@@ -44,10 +44,12 @@ Paths are relative to the project root. Update this index whenever a document is
 | `backend/documentation/api/API.md` | API conventions as implemented, error format, endpoints, sign-in flow, contract regeneration |
 | `backend/documentation/database/DATABASE.md` | Database configuration, tables, custom user model, migrations |
 | `backend/documentation/security/SECURITY.md` | Backend security controls with their tests, and known gaps |
+| `backend/documentation/quality/BACKEND_REVIEW_REPORT.md` | Independent post-implementation review of the Phase 3 backend: agents, findings, tests, coverage, corrections, outstanding issues, assessment |
 | `shared/documentation/CONTRACTS.md` | How the generated OpenAPI contract is shared; points F-1 to F-6 for the Frontend |
 | `shared/contracts/openapi.yaml` | Generated API contract (never edit by hand) |
 | `shared/test-fixtures/phone-numbers.json` | Shared phone-number test cases |
-| `.github/workflows/backend-ci.yml` | Backend CI: lint, tests + PostgreSQL, pip-audit, gitleaks |
+| `.github/workflows/backend-ci.yml` | Backend CI: lint, tests + PostgreSQL, pip-audit |
+| `.github/workflows/secret-scan.yml`, `.gitleaks.toml` | Secret scan (gitleaks) on every push, with allow list for fictional test values |
 | `backend/documentation/architecture/BACKEND_ANALYSIS_2026-11.md` | Backend analysis: modules, domain model, database rules, API inventory, payments, libraries, decisions requested (Accepted with amendments 2026-11-26) |
 | `frontend/documentation/architecture/FRONTEND_ANALYSIS_2026-11.md` | Frontend analysis: requirements, routes, components, design system, responsive, accessibility, library choices, design issues, sequence (Accepted 2026-11-26, amended) |
 

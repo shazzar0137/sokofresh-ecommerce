@@ -5,7 +5,10 @@ _Updated 2026-11-26 night. Phase 3 authorised by the owner; backend foundation b
 ## Owner decisions and actions
 - [x] Go-ahead for Phase 3 (Foundations) (2026-11-26).
 - [ ] **Push `feature/phase-3-foundations`** from `tmp/phase-3-foundations.bundle` (`PHASE_3_BACKEND_COMPLETION_REPORT.md` §10); check CI; review; merge by pull request.
-- [ ] Confirm ADR-0014 (backend foundation choices).
+- [ ] Confirm ADR-0014 (backend foundation choices, items 1–21).
+- [ ] Decide KI-011 (customer deletion vs phone constraint) **before Phase 4**.
+- [ ] Decide KI-013 (admin static files in production, e.g. WhiteNoise).
+- [x] Independent backend review and corrections (2026-11-27, `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`).
 - [ ] Create the Neon development project and set `DATABASE_URL` locally (guide §2).
 - [ ] KRA PIN and ODPC registration (owner: coming soon).
 - [x] Admin users at launch: 2 (2026-11-26).
@@ -40,6 +43,9 @@ See `docs/IMPLEMENTATION_ROADMAP.md` (Phases 4–10): catalogue slice; accounts 
 
 ## Security
 - [ ] Phase 5: staff MFA + admin login rate limiting (KI-007) **before any deployment**.
+- [ ] Phase 5: Turnstile on code requests + daily SMS budget (KI-012) **before enabling a real SMS provider**.
+- [ ] Phase 4: coverage report in CI; Schemathesis and time-machine as the testing strategy plans.
+- [ ] Phase 8: schedule `manage.py purge_expired_cache` (host cron); proxy must overwrite `X-Forwarded-Proto`; origin not directly reachable.
 - [ ] Threat model and data classification (Phase 3/4).
 - [ ] CSP approach decision (risk R-9) in a Phase 3 security spike.
 - [ ] Pochi verification procedure for staff (what to check on the M-Pesa statement) before Phase 7.

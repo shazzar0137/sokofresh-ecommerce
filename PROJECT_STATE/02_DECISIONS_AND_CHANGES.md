@@ -4,6 +4,8 @@ Approved decisions and significant changes, newest first. Formal technology deci
 
 | ID | Date | Decision / change | Status | Reason |
 |---|---|---|---|---|
+| D-043 | 2026-11-27 | ADR-0014 extended (items 13–21): sign-up closed until Phase 5; staff code sign-in refused + admin password-session rule; trusted proxy count; cache sizing + purge job; unused allauth routes shadowed; 401 for not signed in; allauth without headless extra; coverage dev tool; separate secret-scan workflow | Accepted under delegated authority; **owner to confirm** | Fixes from `backend/documentation/quality/BACKEND_REVIEW_REPORT.md` |
+| D-042 | 2026-11-27 | Independent backend review completed (6 reviewers, 3 re-reviewers); corrections committed `9b32959`, `6b776d7` and the report commit | Done | Owner instruction: post-implementation audit |
 | D-041 | 2026-11-26 | Branch delivered to the owner as a git bundle (`tmp/phase-3-foundations.bundle`) because the session had no GitHub write access; owner pushes with own credentials | Done; owner action pending | KI-005; no token requested (Phase 3 instruction) |
 | D-040 | 2026-11-26 | Backend code layout `backend/apps/<app>/` + `backend/config/`; empty `backend/src/` layer folders removed | Done (ADR-0011 item 4, ADR-0014 #5) | Approved removal at scaffold |
 | D-039 | 2026-11-26 | Phase 3 foundation choices (custom RFC 9457 handler, 422 for validation, ruff, database cache, E.164 at allauth endpoints, code format/limits, fail-closed SMS, HSTS start, deferred packages, gitleaks tool, PostgreSQL 17 in CI) | Accepted under delegated authority; **owner to confirm** | ADR-0014 |

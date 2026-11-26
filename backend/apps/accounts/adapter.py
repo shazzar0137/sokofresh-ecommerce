@@ -98,6 +98,11 @@ class AccountAdapter(DefaultAccountAdapter):
     ) -> None:
         from allauth.account import app_settings
 
+        if user is not None and (user.is_staff or user.is_superuser):
+            # Staff cannot use codes (pre_login refuses them), so do not text one.
+            # The HTTP response stays the same (re-review finding R3-4).
+            logger.info("No sign-in code sent to staff account %s", mask_phone(phone))
+            return
         minutes = max(1, app_settings.LOGIN_BY_CODE_TIMEOUT // 60)
         try:
             send_sms(phone, LOGIN_CODE_MESSAGE.format(code=code, minutes=minutes))

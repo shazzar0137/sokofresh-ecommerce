@@ -1,8 +1,10 @@
 # 00 Handover
 
-_Last updated: 2026-11-26 night (Phase 3 backend foundations built on branch `feature/phase-3-foundations`; not yet pushed)_
+_Last updated: 2026-11-27 (Phase 3 backend foundations built **and independently reviewed**; corrections committed on `feature/phase-3-foundations`; not yet pushed)_
 
-> **Blocking for the owner:** the branch could not be pushed from the Claude session (GitHub connector is read-only, KI-005). It is in the project folder as `tmp/phase-3-foundations.bundle`. Push it with the steps in `PHASE_3_BACKEND_COMPLETION_REPORT.md` §10.
+> **Blocking for the owner:** the branch could not be pushed from the Claude session (GitHub connector is read-only, KI-005). It is in the project folder as `tmp/phase-3-foundations.bundle` (**replaced 2026-11-27** with the reviewed version). Push it with the steps in `PHASE_3_BACKEND_COMPLETION_REPORT.md` §10.
+>
+> **Decisions needed before Phase 4:** KI-011 (customer deletion vs phone constraint) and KI-013 (admin static files). See `backend/documentation/quality/BACKEND_REVIEW_REPORT.md` §9.
 
 ## Continuity rule
 
@@ -39,6 +41,7 @@ Authoritative current architecture: `docs/architecture/SYSTEM_ARCHITECTURE.md`. 
 
 - Phase 1 structure and documentation (`PHASE_1_COMPLETION_REPORT.md`); design PDF and Figma file in `assets/design-references/`.
 - Phase 2: research record (+ addenda), requirements baseline v0.3, frontend analysis (accepted, amended), backend analysis (accepted with amendments), consolidated proposal (approved), ADR-0001 to ADR-0013, approved roadmap and testing strategy.
+- Phase 3 backend independent review (2026-11-27): 6 reviewers + 3 re-reviewers; 100 findings (12 High = 10 distinct issues, all fixed and re-verified); 211 tests passing; 94% coverage; `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`.
 - Phase 3 backend (branch `feature/phase-3-foundations`, commits `620f0a6`, `20f316c`, `44f4b67` + a report fix-up): Django 6.1.3 project with uv, settings split, ten apps, phone-based custom user model before the first migration, role groups, allauth headless phone-code sign-in foundation, RFC 9457 errors, `/api/v1/health`, generated contract in `shared/contracts/openapi.yaml` with drift check, outbound-HTTP allow list, log redaction, 89 passing tests on PostgreSQL, GitHub Actions workflow (not yet run), ADR-0014.
 
 ## Outstanding
@@ -59,4 +62,5 @@ Authoritative current architecture: `docs/architecture/SYSTEM_ARCHITECTURE.md`. 
 
 1. Owner pushes the branch and checks the first CI run (fix anything GitHub's runners reveal).
 2. Frontend conversation: Next.js scaffold (fix KI-003), design tokens, type generation from `shared/contracts/openapi.yaml`; confirm contract points F-1 to F-6 (`shared/documentation/CONTRACTS.md`).
-3. Backend: Phase 4 catalogue slice (see report §12). Explain each new package before installing.
+3. Owner/Architect: decide KI-011 and KI-013; confirm ADR-0014 (items 1–21).
+4. Backend: Phase 4 catalogue slice (see completion report §12), only after the above. Explain each new package before installing.

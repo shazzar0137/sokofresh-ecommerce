@@ -28,7 +28,7 @@ _Updated 2026-11-26 (Phase 3, after the independent review). The full planned da
 | `django_session` | Django sessions | Signed-in sessions; allauth's pending login-code state |
 | `django_admin_log` | Django admin | Admin action history |
 | `django_tasks_database_dbtaskresult` | django-tasks-db | Background task queue (ADR-0010) |
-| `sokofresh_cache` | Django database cache | Rate-limit counters. Created by migration `core.0001`; limit 1,000,000 entries so counters cannot be evicted by a flood of other keys |
+| `sokofresh_cache` | Django database cache | Rate-limit counters. Created by migration `core.0001`; limit 100,000 rows (about 40 MB). Expired rows are removed by `manage.py purge_expired_cache`, which must run from host cron (e.g. hourly; ADR-0011 item 9). Residual risk: a flood from many IP addresses can still evict counters until Turnstile is added in Phase 5 (KI-012) |
 | `django_content_type`, `auth_permission`, `django_migrations` | Django | Framework bookkeeping |
 
 ## The custom user model (`accounts_user`)
@@ -60,7 +60,10 @@ The phone CHECK and email uniqueness are **database constraints**, so even code 
 ```
 uv run python manage.py migrate
 ```
-(`migrate` also creates the cache table.)
+(`migrate` also creates the cache table.) Then schedule, e.g. hourly:
+```
+uv run python manage.py purge_expired_cache
+```
 
 ## Open design question (needs a decision before Phase 4 adds tables that reference users)
 

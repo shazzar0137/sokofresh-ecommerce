@@ -150,6 +150,19 @@ def _confirm(client, code):
     return client.post(f"{BASE}/auth/code/confirm", {"code": code}, content_type="application/json")
 
 
+def test_staff_code_confirm_is_refused_even_with_a_valid_code(client, caplog, settings):
+    """SEC-1: if a code were ever sent to a staff number, confirming it fails."""
+    user = UserFactory(phone="+254712345678")
+    _request_code(client)  # sent while still a customer
+    user.is_staff = True
+    user.save()
+    response = _confirm(client, last_code())
+    assert response.status_code == 401
+    assert response.json()["meta"]["is_authenticated"] is False
+    assert "Refused code sign-in for staff account" in caplog.text
+    assert client.get("/" + settings.ADMIN_URL).status_code == 302
+
+
 @pytest.mark.parametrize("role", ["staff", "superuser"])
 def test_staff_cannot_sign_in_with_an_sms_code(client, role, caplog):
     """SEC-1: an SMS code alone must never open Django admin (SIM-swap risk).
@@ -165,11 +178,11 @@ def test_staff_cannot_sign_in_with_an_sms_code(client, role, caplog):
         User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
     else:
         UserFactory(phone="+254712345678", is_staff=True)
-    _request_code(client)
-    response = _confirm(client, last_code())
+    response = _request_code(client)
+    # Same answer as for a customer, but no SMS is sent (R3-4).
     assert response.status_code == 401
-    assert response.json()["meta"]["is_authenticated"] is False
-    assert "Refused code sign-in for staff account" in caplog.text
+    assert sms.outbox == []
+    assert "No sign-in code sent to staff account" in caplog.text
     assert client.get(f"{BASE}/auth/session").status_code == 401
     assert client.get("/" + settings.ADMIN_URL).status_code == 302  # to the login page
 

@@ -2,6 +2,8 @@
 
 _Date: 2026-11-26 (overnight session) · Author: Backend Specialist conversation · Branch: `feature/phase-3-foundations`_
 
+> **Update 2026-11-27:** an independent review found and fixed 10 distinct High issues not covered by the original 89 tests; the test count is now 211. Sections below describe the original implementation; the current state and all corrections are in `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`.
+
 **This is a foundation, not a production-ready system.** Nothing has been deployed. Known gaps that block any deployment are listed in §11.
 
 ## ⚠ Blocking item for the owner (read first)
@@ -123,7 +125,8 @@ See `backend/documentation/security/SECURITY.md` (controls, each with the test t
 | `620f0a6` | Scaffold Django backend foundations (Phase 3) |
 | `20f316c` | Add backend CI workflow (GitHub Actions) |
 | `44f4b67` | Document Phase 3 backend foundations |
-| (this commit) | Record commit hashes in the completion report |
+| `2895fd7` | Record commit hashes in the completion report |
+| `9b32959`, `6b776d7`, + report commit | Review corrections (see `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`) |
 
 GitHub links will exist only after the owner pushes (§10): branch `https://github.com/shazzar0137/sokofresh-ecommerce/tree/feature/phase-3-foundations`, CI under the repository's **Actions** tab.
 
@@ -135,7 +138,7 @@ In **PowerShell**, in the project folder (`cd C:\Users\danie\OneDrive\Documents\
 2. Check the bundle: `git bundle verify tmp\phase-3-foundations.bundle` should end with `is okay`.
 3. Bring in the branch: `git fetch tmp\phase-3-foundations.bundle feature/phase-3-foundations:feature/phase-3-foundations`
 4. Switch to it: `git switch feature/phase-3-foundations`
-5. Check: `git log --oneline -5` shows the four branch commits (newest first), then `965e047 Initial commit`.
+5. Check: `git log --oneline -8` shows the seven branch commits (newest first: the review report commit, `6b776d7`, `9b32959`, `2895fd7`, `44f4b67`, `20f316c`, `620f0a6`), then `965e047 Initial commit`.
 6. Push (uses your existing SSH key): `git push -u origin feature/phase-3-foundations`
 7. On GitHub, open the repository → **Actions** tab → **Backend CI**, and check that all four jobs show a green tick.
 8. Optional: delete the bundle file: `del tmp\phase-3-foundations.bundle`.
