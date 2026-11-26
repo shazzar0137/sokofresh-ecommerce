@@ -23,7 +23,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Health'
-          description: ''
+          description: The service and its database are reachable.
         4XX:
           description: Client error
           content:
@@ -71,7 +71,24 @@ components:
           example: One or more fields are invalid.
         code:
           type: string
-          description: Stable machine-readable error code.
+          enum:
+          - validation_error
+          - malformed_request
+          - not_authenticated
+          - authentication_failed
+          - permission_denied
+          - not_found
+          - method_not_allowed
+          - not_acceptable
+          - unsupported_media_type
+          - rate_limited
+          - csrf_failed
+          - bad_request
+          - service_unavailable
+          - error
+          - server_error
+          description: Stable machine-readable error code (switch on this, not on
+            title).
           example: validation_error
         errors:
           type: array

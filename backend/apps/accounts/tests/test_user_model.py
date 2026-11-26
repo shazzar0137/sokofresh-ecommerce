@@ -70,3 +70,52 @@ def test_str_does_not_expose_the_full_number():
     assert "345" not in str(user)
     user.full_name = "Achieng Otieno"
     assert str(user) == "Achieng Otieno"
+
+
+def test_clean_raises_a_validation_error_for_invalid_phone():
+    user = User(phone="12345")
+    with pytest.raises(ValidationError) as exc:
+        user.full_clean(exclude=["password"])
+    assert "phone" in exc.value.message_dict
+
+
+@pytest.mark.parametrize("email", ["", "   ", None])
+def test_blank_email_is_stored_as_null_on_every_save(email):
+    """DB-3: save() normalises too (DRF does not call clean())."""
+    for number in ("+254712345678", "+254712345679"):
+        user = User(phone=number, email=email)
+        user.set_unusable_password()
+        user.save()
+        user.refresh_from_db()
+        assert user.email is None
+
+
+def test_email_is_trimmed_and_lowercased_on_save():
+    user = User(phone="+254712345678", email="  Wanjiku@Example.COM ")
+    user.set_unusable_password()
+    user.save()
+    user.refresh_from_db()
+    assert user.email == "wanjiku@example.com"
+
+
+@pytest.mark.parametrize("email", ["", " a@x.com", "A@x.com"])
+def test_database_rejects_unnormalised_email(email):
+    with pytest.raises(IntegrityError), transaction.atomic(), connection.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO accounts_user (password, is_superuser, phone, phone_verified, email,"
+            " full_name, is_staff, is_active, date_joined) VALUES ('!', false, '+254712345678',"
+            " false, %s, '', false, true, now())",
+            [email],
+        )
+
+
+def test_database_rejects_empty_password():
+    with pytest.raises(IntegrityError), transaction.atomic():
+        User.objects.bulk_create([User(phone="+254712345678", password="")])
+
+
+def test_natural_key_lookup_accepts_local_format():
+    user = User.objects.create_user("0712345678")
+    assert User.objects.get_by_natural_key("0712 345 678") == user
+    with pytest.raises(User.DoesNotExist):
+        User.objects.get_by_natural_key("not-a-phone")

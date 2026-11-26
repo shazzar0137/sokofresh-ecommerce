@@ -26,13 +26,15 @@ def _clear_sms_outbox():
 
 
 @pytest.fixture(autouse=True)
-def _clear_cache():
-    """Rate-limit counters live in the cache; reset them between tests."""
+def _clear_cache(django_db_setup, django_db_blocker):
+    """Rate-limit counters live in the (database) cache; reset them between tests."""
     from django.core.cache import cache
 
-    cache.clear()
+    with django_db_blocker.unblock():
+        cache.clear()
     yield
-    cache.clear()
+    with django_db_blocker.unblock():
+        cache.clear()
 
 
 @pytest.fixture

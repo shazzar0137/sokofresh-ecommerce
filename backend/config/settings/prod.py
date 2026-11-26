@@ -1,11 +1,14 @@
 """Production (and staging) settings.
 
 Every value that differs per deployment comes from the host's environment
-variables. Missing required values stop the application from starting, so a
+variables. Missing or unsafe values stop the application from starting, so a
 misconfigured server fails safely instead of running insecurely.
 """
 
+import re
+
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.module_loading import import_string
 
 from .base import *  # noqa: F403
 from .base import ADMIN_URL, SECRET_KEY, SMS_BACKEND, env
@@ -16,20 +19,37 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
 if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS must list the site's host names.")
 
-if len(SECRET_KEY) < 50 or SECRET_KEY.startswith(("dev-only", "test-only")):
+# Same rules as Django's security.W009 check, enforced at start-up.
+if (
+    len(SECRET_KEY) < 50
+    or len(set(SECRET_KEY)) < 5
+    or SECRET_KEY.startswith(("dev-only", "test-only", "django-insecure"))
+):
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must be a long, random production value.")
 
-if ADMIN_URL in ("admin/", "/admin/"):
-    raise ImproperlyConfigured("DJANGO_ADMIN_URL must be a non-default path (e.g. 'staff-x7k2/').")
+# A short, lower-case path segment ending in "/", not containing "admin".
+if not re.fullmatch(r"[a-z0-9][a-z0-9-]{5,}/", ADMIN_URL) or "admin" in ADMIN_URL:
+    raise ImproperlyConfigured(
+        "DJANGO_ADMIN_URL must be a non-default path like 'staff-x7k2/' "
+        "(lower-case letters, digits and dashes, ending in '/', without 'admin')."
+    )
 
-_DEV_SMS_BACKENDS = (
-    "apps.notifications.sms.ConsoleSmsBackend",
-    "apps.notifications.sms.LocMemSmsBackend",
-)
-if SMS_BACKEND in _DEV_SMS_BACKENDS:
+try:
+    _sms_backend = import_string(SMS_BACKEND.strip())
+except ImportError as exc:
+    raise ImproperlyConfigured(f"SMS_BACKEND cannot be imported: {SMS_BACKEND!r}") from exc
+if getattr(_sms_backend, "dev_only", True):
     raise ImproperlyConfigured("Development SMS backends cannot be used in production.")
 
-# HTTPS everywhere (TLS terminates at Cloudflare / the host's proxy).
+# Required: how many proxies (Cloudflare, host load balancer) sit in front of
+# Django. Wrong values either let clients spoof their IP or make all users share
+# one IP for rate limits, so there is no default.
+TRUSTED_PROXY_COUNT = env.int("DJANGO_TRUSTED_PROXY_COUNT")
+ALLAUTH_TRUSTED_PROXY_COUNT = TRUSTED_PROXY_COUNT
+REST_FRAMEWORK = {**REST_FRAMEWORK, "NUM_PROXIES": TRUSTED_PROXY_COUNT}  # noqa: F405
+
+# HTTPS everywhere (TLS terminates at Cloudflare / the host's proxy). The proxy
+# must overwrite X-Forwarded-Proto, and the app must not be reachable directly.
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)
 if env.bool("DJANGO_BEHIND_TLS_PROXY", default=True):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

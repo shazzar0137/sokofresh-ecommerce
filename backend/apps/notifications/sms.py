@@ -32,12 +32,17 @@ class SmsMessage:
 
 
 class BaseSmsBackend:
+    # True for backends that never deliver real messages (refused in production).
+    dev_only = False
+
     def send(self, message: SmsMessage) -> None:  # pragma: no cover - interface
         raise NotImplementedError
 
 
 class ConsoleSmsBackend(BaseSmsBackend):
     """Development only: shows the message so a developer can sign in locally."""
+
+    dev_only = True
 
     def send(self, message: SmsMessage) -> None:
         print(f"[SMS to {mask_phone(message.to)}] {message.body}", flush=True)  # noqa: T201
@@ -48,6 +53,8 @@ outbox: list[SmsMessage] = []
 
 
 class LocMemSmsBackend(BaseSmsBackend):
+    dev_only = True
+
     def send(self, message: SmsMessage) -> None:
         outbox.append(message)
 

@@ -32,9 +32,23 @@ def test_schema_is_valid_and_has_the_health_endpoint(generated):
 def test_every_operation_documents_problem_details_errors(generated):
     schema = yaml.safe_load(generated)
     assert "ProblemDetail" in schema["components"]["schemas"]
+    methods = {"get", "post", "put", "patch", "delete"}
     for path_item in schema["paths"].values():
-        for operation in path_item.values():
-            assert {"4XX", "5XX"} <= set(operation["responses"])
+        for method, operation in path_item.items():
+            if method in methods:
+                assert {"4XX", "5XX"} <= set(operation["responses"])
+
+
+def test_error_codes_are_published_as_an_enum(generated):
+    """API-7: the frontend can switch on a typed list of codes."""
+    from apps.core.exceptions import PROBLEM_CODES
+
+    schema = yaml.safe_load(generated)
+    code = schema["components"]["schemas"]["ProblemDetail"]["properties"]["code"]
+    assert code["enum"] == list(PROBLEM_CODES)
+    assert {"validation_error", "not_authenticated", "csrf_failed", "rate_limited"} <= set(
+        code["enum"]
+    )
 
 
 def test_committed_contract_matches_the_code(generated):

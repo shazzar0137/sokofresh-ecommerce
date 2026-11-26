@@ -30,6 +30,7 @@ PROD_ENV = {
     "DJANGO_ALLOWED_HOSTS": "api.sokofresh.example",
     "DJANGO_ADMIN_URL": "staff-test-path/",
     "DATABASE_URL": "postgres://u:p@localhost:5432/unused",
+    "DJANGO_TRUSTED_PROXY_COUNT": "1",
 }
 
 
@@ -76,17 +77,45 @@ def test_production_settings_pass_the_deploy_checklist():
 @pytest.mark.parametrize(
     ("override", "message"),
     [
-        ({"DJANGO_SECRET_KEY": "short"}, "DJANGO_SECRET_KEY"),
-        ({"DJANGO_SECRET_KEY": "dev-only-" + "x" * 60}, "DJANGO_SECRET_KEY"),
-        ({"DJANGO_ALLOWED_HOSTS": ""}, "DJANGO_ALLOWED_HOSTS"),
-        ({"DJANGO_ADMIN_URL": "admin/"}, "DJANGO_ADMIN_URL"),
-        ({"SMS_BACKEND": "apps.notifications.sms.ConsoleSmsBackend"}, "SMS"),
+        ({"DJANGO_SECRET_KEY": "short"}, "DJANGO_SECRET_KEY must be"),
+        ({"DJANGO_SECRET_KEY": "dev-only-" + "x" * 60}, "DJANGO_SECRET_KEY must be"),
+        ({"DJANGO_SECRET_KEY": "a" * 60}, "DJANGO_SECRET_KEY must be"),
+        ({"DJANGO_SECRET_KEY": "django-insecure-" + "abcdef123" * 6}, "DJANGO_SECRET_KEY must be"),
+        ({"DJANGO_ALLOWED_HOSTS": ""}, "DJANGO_ALLOWED_HOSTS must list"),
+        ({"DJANGO_ADMIN_URL": "admin/"}, "DJANGO_ADMIN_URL must be"),
+        ({"DJANGO_ADMIN_URL": ""}, "DJANGO_ADMIN_URL must be"),
+        ({"DJANGO_ADMIN_URL": "admin"}, "DJANGO_ADMIN_URL must be"),
+        ({"DJANGO_ADMIN_URL": "/admin"}, "DJANGO_ADMIN_URL must be"),
+        ({"DJANGO_ADMIN_URL": "Admin/"}, "DJANGO_ADMIN_URL must be"),
+        ({"DJANGO_ADMIN_URL": "admin//"}, "DJANGO_ADMIN_URL must be"),
+        ({"DJANGO_ADMIN_URL": "staff-admin/"}, "DJANGO_ADMIN_URL must be"),
+        ({"DJANGO_ADMIN_URL": "staff-test-path"}, "DJANGO_ADMIN_URL must be"),
+        (
+            {"SMS_BACKEND": "apps.notifications.sms.ConsoleSmsBackend"},
+            "Development SMS backends cannot be used in production",
+        ),
+        (
+            {"SMS_BACKEND": "apps.notifications.sms.ConsoleSmsBackend "},
+            "Development SMS backends cannot be used in production",
+        ),
+        (
+            {"SMS_BACKEND": "apps.notifications.sms.LocMemSmsBackend"},
+            "Development SMS backends cannot be used in production",
+        ),
+        ({"SMS_BACKEND": "apps.nowhere.Backend"}, "SMS_BACKEND cannot be imported"),
     ],
 )
 def test_production_refuses_unsafe_configuration(override, message):
     result = run_manage("check", env_overrides={**PROD_ENV, **override})
     assert result.returncode != 0
     assert message in result.stderr
+
+
+def test_production_requires_the_trusted_proxy_count():
+    env = {k: v for k, v in PROD_ENV.items() if k != "DJANGO_TRUSTED_PROXY_COUNT"}
+    result = run_manage("check", env_overrides=env)
+    assert result.returncode != 0
+    assert "DJANGO_TRUSTED_PROXY_COUNT" in result.stderr
 
 
 def test_production_refuses_to_start_without_a_secret_key():
@@ -100,7 +129,9 @@ def test_production_cookies_and_https():
     script = (
         "import django; django.setup(); from django.conf import settings as s; "
         "print(s.SESSION_COOKIE_SECURE, s.CSRF_COOKIE_SECURE, s.SECURE_SSL_REDIRECT, "
-        "s.SECURE_HSTS_SECONDS > 0, s.DEBUG, s.API_DOCS_ENABLED)"
+        "s.SECURE_HSTS_SECONDS > 0, s.DEBUG, s.API_DOCS_ENABLED, "
+        "s.SECURE_PROXY_SSL_HEADER == ('HTTP_X_FORWARDED_PROTO', 'https'), "
+        "s.REST_FRAMEWORK['NUM_PROXIES'] == s.ALLAUTH_TRUSTED_PROXY_COUNT == 1)"
     )
     env = {k: v for k, v in os.environ.items() if not k.startswith(("DJANGO_", "SMS_"))}
     env.update(PROD_ENV)
@@ -112,6 +143,27 @@ def test_production_cookies_and_https():
         text=True,
         timeout=60,
     )
-    assert result.stdout.split() == ["True", "True", "True", "True", "False", "False"], (
-        result.stderr
-    )
+    assert result.stdout.split() == [
+        "True",
+        "True",
+        "True",
+        "True",
+        "False",
+        "False",
+        "True",
+        "True",
+    ], result.stderr
+
+
+def test_env_file_values_win_over_development_defaults(tmp_path, monkeypatch):
+    """ARCH-4: backend/.env is read before dev/test defaults are applied."""
+    from config.settings._env import load_env_file
+
+    env_file = tmp_path / ".env"
+    env_file.write_text("SOKOFRESH_TEST_ONLY_VAR=from-env-file\nPATH_UNCHANGED=x\n")
+    monkeypatch.delenv("SOKOFRESH_TEST_ONLY_VAR", raising=False)
+    monkeypatch.setenv("PATH_UNCHANGED", "real-environment")
+    load_env_file(env_file)
+    assert os.environ["SOKOFRESH_TEST_ONLY_VAR"] == "from-env-file"
+    assert os.environ["PATH_UNCHANGED"] == "real-environment"  # real env still wins
+    monkeypatch.delenv("SOKOFRESH_TEST_ONLY_VAR")

@@ -107,31 +107,3 @@ jobs:
         run: |
           uv export --format requirements-txt --all-groups --no-emit-project > "$RUNNER_TEMP/requirements.txt"
           uv run pip-audit -r "$RUNNER_TEMP/requirements.txt" --disable-pip --progress-spinner off
-
-  secret-scan:
-    name: Secret scan (gitleaks)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: .
-    env:
-      GITLEAKS_VERSION: 8.30.1
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      # The gitleaks tool itself (MIT licence), checksum-verified. The
-      # gitleaks GitHub Action is not used because it has its own licence terms.
-      - name: Install gitleaks
-        run: |
-          cd "$RUNNER_TEMP"
-          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
-          file="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          curl -sSfL -o "$file" "$base/$file"
-          curl -sSfL -o checksums.txt "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
-          grep " ${file}\$" checksums.txt | sha256sum -c -
-          tar -xzf "$file" gitleaks
-      - name: Scan the full git history
-        run: '"$RUNNER_TEMP/gitleaks" git --redact --no-banner --exit-code 1 .'

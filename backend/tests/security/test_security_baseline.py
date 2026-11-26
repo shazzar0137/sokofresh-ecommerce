@@ -45,12 +45,3 @@ def test_sign_in_works_with_the_csrf_token():
 def test_api_docs_are_not_served_outside_development(client):
     assert client.get("/api/v1/docs/").status_code == 404
     assert client.get("/api/v1/schema").status_code == 404
-
-
-def test_default_admin_path_is_not_used_in_production_settings():
-    # prod.py refuses "admin/" (tested in tests/integration/test_settings.py);
-    # here we check the admin login page never leaks a server error.
-    from django.conf import settings
-
-    response = Client().get("/" + settings.ADMIN_URL)
-    assert response.status_code in (200, 302)

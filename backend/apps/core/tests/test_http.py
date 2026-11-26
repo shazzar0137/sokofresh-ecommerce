@@ -43,3 +43,41 @@ def test_redirects_are_not_followed():
     with outbound_client(ALLOWED) as client:
         response = client.get("/moved")
     assert response.status_code == 302
+
+
+@respx.mock
+def test_provider_headers_are_added_to_the_defaults():
+    """ARCH-6: e.g. Africa's Talking's apiKey header."""
+    route = respx.get(f"{ALLOWED}/ping").mock(return_value=httpx.Response(200))
+    with outbound_client(ALLOWED, headers={"apiKey": "test-key"}) as client:
+        client.get("/ping")
+    sent = route.calls.last.request.headers
+    assert sent["apiKey"] == "test-key"
+    assert sent["User-Agent"].startswith("SokoFresh-backend")
+
+
+@pytest.mark.parametrize(
+    "override",
+    [{"follow_redirects": True}, {"event_hooks": {}}, {"transport": None}, {"mounts": {}}],
+)
+def test_safety_options_cannot_be_overridden(override):
+    with pytest.raises(TypeError):
+        outbound_client(ALLOWED, **override)
+
+
+@respx.mock
+def test_host_matching_ignores_letter_case(settings):
+    settings.OUTBOUND_HTTP_ALLOWED_HOSTS = ["Sandbox.Example-Provider.test"]
+    respx.get(f"{ALLOWED}/ping").mock(return_value=httpx.Response(200))
+    with outbound_client(ALLOWED) as client:
+        assert client.get("/ping").status_code == 200
+
+
+def test_only_port_443_unless_listed(settings):
+    """SEC-10: an allowed host on another port is a different service."""
+    with pytest.raises(OutboundHostNotAllowed):
+        outbound_client("https://sandbox.example-provider.test:6379")
+    settings.OUTBOUND_HTTP_ALLOWED_HOSTS = ["sandbox.example-provider.test:8443"]
+    outbound_client("https://sandbox.example-provider.test:8443").close()
+    with pytest.raises(OutboundHostNotAllowed):
+        outbound_client(ALLOWED)

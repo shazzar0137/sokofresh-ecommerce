@@ -1,17 +1,30 @@
-"""Logging filter that removes personal data before log lines are written.
+"""Logging that removes personal data before anything is written.
 
 Phone numbers are personal data under the Kenya Data Protection Act, 2019, and
 one-time codes are secrets. Neither may appear in full in logs (NFR-07,
-proposal §9). This filter is a safety net: code should still avoid logging them.
+proposal §9). Two layers:
+
+- RedactPersonalDataFilter rewrites each record's message (for any handler);
+- RedactingFormatter redacts the complete formatted output, including
+  tracebacks and stack traces (review findings ARCH-5 / SEC-4).
+
+This is a safety net: code should still avoid logging these values.
 """
 
 import logging
 import re
 
-# Kenyan mobile numbers in common written forms: +2547..., 2547..., 07..., 01...
-_PHONE_RE = re.compile(r"(?<!\d)(?:\+?254|0)([17]\d{2})[ -]?(\d{3})[ -]?(\d{3})(?!\d)")
-# "code 123456", "code: 123456", "code is 123456", "otp=123456"
-_CODE_RE = re.compile(r"(?i)\b(code|otp|pin)(\s*(?:is|:|=)?\s*)\d{4,8}\b")
+# Kenyan mobiles: +254 / 254 / (+254) / 0, optional "(0)", then 7XX or 1XX and six
+# more digits, with optional spaces, dots, dashes or brackets between groups.
+_SEP = r"[\s.\-()]*"
+_PHONE_RE = re.compile(
+    rf"(?<![\d+])(?:\(?\+?254\)?{_SEP}(?:\(0\){_SEP})?|0)([17]\d{{2}}){_SEP}(\d{{3}}){_SEP}(\d{{3}})(?!\d)"
+)
+# "code 123456", "code: 123456", "code is 123456", "otp=123456", "token 123456",
+# and JSON/dict forms: "code": "123456", 'code': '123456'.
+_CODE_RE = re.compile(
+    r"""(?i)(["']?\b(?:code|otp|pin|token)\b["']?)(\s*(?:is|:|=)?\s*["']?)\d{4,8}\b"""
+)
 
 
 def redact(text: str) -> str:
@@ -32,3 +45,10 @@ class RedactPersonalDataFilter(logging.Filter):
             record.msg = redacted
             record.args = None
         return True
+
+
+class RedactingFormatter(logging.Formatter):
+    """Format normally, then redact the whole text (message, traceback, stack)."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        return redact(super().format(record))

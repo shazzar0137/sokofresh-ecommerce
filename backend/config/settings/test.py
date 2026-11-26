@@ -2,6 +2,8 @@
 
 import os
 
+from . import _env  # noqa: F401  (reads backend/.env first)
+
 os.environ.setdefault("DJANGO_SECRET_KEY", "test-only-insecure-key-0123456789abcdef0123456789")
 os.environ.setdefault(
     "DATABASE_URL", "postgres://sokofresh:sokofresh-local-dev@localhost:5432/sokofresh_dev"
@@ -15,9 +17,9 @@ ALLOWED_HOSTS = ["testserver", "localhost"]
 # Fast, insecure hashing is acceptable only for tests.
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
-# Each test process gets its own in-memory cache, so rate limits reset between tests.
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
-
+# Tests use the same database cache as production (created by migration
+# core.0001), so rate-limit behaviour is tested on the real backend. conftest.py
+# clears it between tests.
 # Messages are captured in memory (apps.notifications.sms.outbox).
 SMS_BACKEND = "apps.notifications.sms.LocMemSmsBackend"
 

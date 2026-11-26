@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from .exceptions import PROBLEM_CODES
+
 PROBLEM_DETAIL_SCHEMA: dict[str, Any] = {
     "type": "object",
     "description": "RFC 9457 problem details. Returned for every error response.",
@@ -12,7 +14,8 @@ PROBLEM_DETAIL_SCHEMA: dict[str, Any] = {
         "detail": {"type": "string", "example": "One or more fields are invalid."},
         "code": {
             "type": "string",
-            "description": "Stable machine-readable error code.",
+            "enum": list(PROBLEM_CODES),
+            "description": "Stable machine-readable error code (switch on this, not on title).",
             "example": "validation_error",
         },
         "errors": {

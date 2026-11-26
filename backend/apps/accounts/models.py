@@ -10,26 +10,40 @@ Roles are Django groups (see roles.py): Customer, Rider, Staff, Admin.
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q
-from django.db.models.functions import Lower
+from django.db.models import F, Q
+from django.db.models.functions import Lower, Trim
 from django.utils import timezone
 
-from apps.core.phone import mask_phone, normalize_kenyan_mobile
+from apps.core.phone import InvalidPhoneNumber, mask_phone, normalize_kenyan_mobile
 
 # Database-level rule: phone numbers are stored only in Kenyan E.164 form.
 KENYAN_E164_REGEX = r"^\+254[17][0-9]{8}$"
 
 
+def _normalize_email(email: str | None) -> str | None:
+    """Trimmed, lower-case email, or None when empty (one rule for every path)."""
+    email = (email or "").strip()
+    return BaseUserManager.normalize_email(email).lower() if email else None
+
+
 class UserManager(BaseUserManager["User"]):
     use_in_migrations = True
+
+    def get_by_natural_key(self, username: str) -> "User":
+        # Lets staff type 0712 345 678 at the admin login (finding DB-6).
+        try:
+            username = normalize_kenyan_mobile(username)
+        except InvalidPhoneNumber:
+            pass
+        return super().get_by_natural_key(username)
 
     def _create_user(self, phone: str, password: str | None, **extra_fields) -> "User":
         if not phone:
             raise ValueError("A phone number is required.")
         phone = normalize_kenyan_mobile(phone)
-        email = extra_fields.pop("email", None)
-        email = self.normalize_email(email).lower() if email else None
+        email = _normalize_email(extra_fields.pop("email", None))
         user = self.model(phone=phone, email=email, **extra_fields)
         if password:
             user.set_password(password)
@@ -96,6 +110,14 @@ class User(AbstractBaseUser, PermissionsMixin):
                 condition=Q(email__isnull=False),
                 name="accounts_user_email_unique_ci",
             ),
+            # Stored email is NULL or already trimmed and lower-case, so the unique
+            # rule above cannot be dodged with "" or spaces (finding DB-3).
+            models.CheckConstraint(
+                condition=Q(email__isnull=True) | (~Q(email="") & Q(email=Lower(Trim(F("email"))))),
+                name="accounts_user_email_normalised",
+            ),
+            # Every user has a real or deliberately unusable password hash.
+            models.CheckConstraint(condition=~Q(password=""), name="accounts_user_password_set"),
         ]
 
     def __str__(self) -> str:
@@ -105,11 +127,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     def clean(self) -> None:
         super().clean()
         if self.phone:
-            self.phone = normalize_kenyan_mobile(self.phone)
-        if self.email:
-            self.email = self.__class__.objects.normalize_email(self.email).lower()
-        else:
-            self.email = None
+            try:
+                self.phone = normalize_kenyan_mobile(self.phone)
+            except InvalidPhoneNumber as exc:
+                # A form error, not a crash, in Django admin (finding DB-1).
+                raise ValidationError({"phone": str(exc)}, code="invalid_phone") from exc
+        self.email = _normalize_email(self.email)
+
+    def save(self, *args, **kwargs) -> None:
+        # Normalise on every save, not only in forms (DRF does not call clean()).
+        self.email = _normalize_email(self.email)
+        super().save(*args, **kwargs)
 
     def get_full_name(self) -> str:
         return self.full_name

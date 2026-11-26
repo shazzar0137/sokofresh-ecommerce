@@ -15,6 +15,12 @@ from apps.core.logging import RedactPersonalDataFilter, redact
         "sending to 0712345678",
         "sending to 0712 345 678",
         "sending to 0110123456",
+        "sending to +254-712-345-678",
+        "sending to (+254) 712 345678",
+        "sending to +254 712345678",
+        "sending to +254(0)712345678",
+        "sending to 0712.345.678",
+        '{"phone": "+254712345678"}',
     ],
 )
 def test_phone_numbers_are_masked(text):
@@ -53,3 +59,38 @@ def test_logged_output_is_redacted(caplog):
     logger.filters.clear()
     assert "654321" not in caplog.text
     assert "+254712345678" not in caplog.text
+
+
+def test_formatter_redacts_tracebacks():
+    """ARCH-5 / SEC-4: exception text is redacted too."""
+    import sys
+
+    from apps.core.logging import RedactingFormatter
+
+    try:
+        raise RuntimeError("failed for +254712345678 with code 654321")
+    except RuntimeError:
+        record = logging.LogRecord("t", logging.ERROR, __file__, 1, "boom", None, sys.exc_info())
+    output = RedactingFormatter("%(message)s").format(record)
+    assert "RuntimeError" in output
+    assert "+254712345678" not in output and "654321" not in output
+
+
+def test_configured_handlers_redact_real_log_output():
+    """QA-4: the real LOGGING config (not a hand-attached filter) redacts."""
+    from apps.core.logging import RedactingFormatter, RedactPersonalDataFilter
+
+    for name in ("apps", "django", "apps.notifications.sms"):
+        logger = logging.getLogger(name)
+        while not logger.handlers and logger.parent:
+            logger = logger.parent
+        handler = logger.handlers[0]
+        assert isinstance(handler.formatter, RedactingFormatter)
+        assert any(isinstance(f, RedactPersonalDataFilter) for f in handler.filters)
+        record = logging.LogRecord(name, logging.INFO, __file__, 1, "to %s", ("0712345678",), None)
+        assert "0712345678" not in handler.format(record)
+
+
+def test_outbound_request_urls_are_not_logged_at_info():
+    """SEC-11: httpx logs full URLs (which may carry tokens) at INFO."""
+    assert logging.getLogger("httpx").getEffectiveLevel() >= logging.WARNING

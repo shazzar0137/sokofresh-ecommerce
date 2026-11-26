@@ -8,6 +8,14 @@
 *.pfx
 secrets/
 credentials*.json
+.envrc
+.claude/settings.local.json
+
+# --- Database files and dumps (may contain real data) ---
+*.sqlite3
+*.sql
+*.dump
+*.bundle
 
 # --- Logs ---
 logs/*

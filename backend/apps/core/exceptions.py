@@ -26,8 +26,10 @@ from http import HTTPStatus
 from typing import Any
 
 from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import Http404
 from rest_framework import exceptions, status
+from rest_framework.fields import get_error_detail
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
@@ -50,6 +52,8 @@ _CODE_BY_EXCEPTION: list[tuple[type[Exception], str]] = [
     (exceptions.Throttled, "rate_limited"),
 ]
 
+# Every `code` the API can return. The OpenAPI contract publishes this list as an
+# enum, so a new code must be added here (and documented in API.md).
 _TITLES = {
     "validation_error": "Validation failed",
     "malformed_request": "Malformed request",
@@ -61,6 +65,10 @@ _TITLES = {
     "not_acceptable": "Not acceptable",
     "unsupported_media_type": "Unsupported media type",
     "rate_limited": "Too many requests",
+    "csrf_failed": "Security token missing or invalid",
+    "bad_request": "Bad request",
+    "service_unavailable": "Service unavailable",
+    "error": "Request failed",
     "server_error": "Something went wrong",
 }
 
@@ -124,17 +132,23 @@ def _code_for(exc: Exception) -> str:
     for exc_type, code in _CODE_BY_EXCEPTION:
         if isinstance(exc, exc_type):
             return code
-    return getattr(exc, "default_code", None) or "error"
+    return "error"
+
+
+PROBLEM_CODES: tuple[str, ...] = tuple(_TITLES)
 
 
 def problem_details_exception_handler(exc: Exception, context: dict[str, Any]) -> Response | None:
     """DRF exception handler (settings: REST_FRAMEWORK["EXCEPTION_HANDLER"])."""
-    # Let DRF convert Django's Http404 / PermissionDenied and set headers
-    # (e.g. Retry-After for throttling, WWW-Authenticate).
+    # Convert Django exceptions to DRF ones ourselves, with generic messages:
+    # Django's own messages may describe internals (DRF would pass them on).
     if isinstance(exc, Http404):
         exc = exceptions.NotFound()
     elif isinstance(exc, PermissionDenied):
         exc = exceptions.PermissionDenied()
+    elif isinstance(exc, DjangoValidationError):
+        # e.g. model.full_clean() inside a view: a field problem, not a crash.
+        exc = exceptions.ValidationError(get_error_detail(exc))
 
     response = drf_exception_handler(exc, context)
 
@@ -154,6 +168,12 @@ def problem_details_exception_handler(exc: Exception, context: dict[str, Any]) -
         response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
         errors = _flatten_field_errors(exc.detail)
         detail = "One or more fields are invalid."
+    elif isinstance(exc, exceptions.ParseError):
+        # Do not echo the parser's internal message.
+        detail = "The request body is not valid JSON."
+    elif isinstance(exc, exceptions.PermissionDenied) and str(exc.detail).startswith("CSRF Failed"):
+        code = "csrf_failed"
+        detail = "Send the CSRF token in the X-CSRFToken header."
     else:
         raw = exc.detail if isinstance(exc, exceptions.APIException) else str(exc)
         detail = str(raw) if not isinstance(raw, (dict, list)) else "Request failed."

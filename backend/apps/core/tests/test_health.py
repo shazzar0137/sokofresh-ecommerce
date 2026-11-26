@@ -19,8 +19,9 @@ def test_health_reports_503_when_database_is_down(api_client, monkeypatch):
     def broken_cursor(*args, **kwargs):
         raise OperationalError("connection refused to db.internal:5432")
 
-    monkeypatch.setattr(views.connection, "cursor", broken_cursor)
-    response = api_client.get("/api/v1/health")
+    with monkeypatch.context() as patch:
+        patch.setattr(views.connection, "cursor", broken_cursor)
+        response = api_client.get("/api/v1/health")
     assert response.status_code == 503
     body = response.json()
     assert body["code"] == "service_unavailable"

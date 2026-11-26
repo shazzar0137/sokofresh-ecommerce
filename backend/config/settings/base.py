@@ -9,6 +9,7 @@ secret is written in this file.
 from pathlib import Path
 
 import environ
+from django.utils.csp import CSP
 
 # backend/ (the folder that holds manage.py)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -93,17 +94,31 @@ TEMPLATES = [
 DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DATABASE_CONN_MAX_AGE", default=60)
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
-DATABASES["default"]["ATOMIC_REQUESTS"] = False
+# Set when DATABASE_URL points at a transaction-mode pooler (Neon "-pooler" host):
+# server-side cursors do not work through PgBouncer in transaction mode.
+DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = env.bool(
+    "DATABASE_TRANSACTION_POOLER", default=False
+)
 
 # Shared cache (rate limits for allauth and DRF need one cache for all
 # processes). Database cache: no Redis needed (ADR-0010). Create the table with
 # `manage.py createcachetable` at deploy time.
+# The table is created by migration core.0001. Django's default limit (300
+# entries) let a burst of throttle keys evict the sign-in rate-limit counters
+# (review findings PERF-1 / DB-2), so the limit is set far above expected use.
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": "sokofresh_cache",
+        "OPTIONS": {"MAX_ENTRIES": 1_000_000, "CULL_FREQUENCY": 4},
     }
 }
+
+# Number of trusted reverse proxies in front of Django (Cloudflare, the host's
+# load balancer). Rate limits read the client IP from X-Forwarded-For only past
+# this many proxies; with 0 the header is ignored, so it cannot be spoofed.
+TRUSTED_PROXY_COUNT = env.int("DJANGO_TRUSTED_PROXY_COUNT", default=0)
+ALLAUTH_TRUSTED_PROXY_COUNT = TRUSTED_PROXY_COUNT
 
 # --- Users, authentication and sessions (ADR-0005) ----------------------------
 
@@ -133,6 +148,7 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 14 days
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_TRUSTED_ORIGINS: list[str] = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
+CSRF_FAILURE_VIEW = "apps.core.views.csrf_failure"
 
 # django-allauth: phone number + one-time code, headless browser client only.
 ACCOUNT_ADAPTER = "apps.accounts.adapter.AccountAdapter"
@@ -146,6 +162,9 @@ ACCOUNT_LOGIN_BY_CODE_MAX_ATTEMPTS = 3
 ACCOUNT_LOGIN_BY_CODE_FORMAT = {"numeric": True, "length": 6, "dashed": False}
 ACCOUNT_PHONE_VERIFICATION_ENABLED = True
 ACCOUNT_PHONE_VERIFICATION_CODE_FORMAT = {"numeric": True, "length": 6, "dashed": False}
+ACCOUNT_PHONE_VERIFICATION_TIMEOUT = 5 * 60  # same as login codes (the SMS text says so)
+# Sign-up opens in Phase 5 (account creation at checkout, ADR-0011 item 5).
+ACCOUNT_SIGNUP_OPEN = False
 ACCOUNT_PREVENT_ENUMERATION = True
 # Tighter than allauth's defaults for SMS codes (each code costs money and is a
 # target for SMS-pumping fraud). The per-IP limit stays generous because many
@@ -153,6 +172,7 @@ ACCOUNT_PREVENT_ENUMERATION = True
 ACCOUNT_RATE_LIMITS = {
     "request_login_code": "30/m/ip,3/10m/key,10/d/key",
     "login": "30/m/ip",
+    "change_phone": "1/m/user,3/d/user",
 }
 HEADLESS_ONLY = True
 HEADLESS_CLIENTS = ("browser",)
@@ -164,7 +184,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         # Session cookie set by allauth; DRF enforces CSRF for authenticated
         # session requests.
-        "rest_framework.authentication.SessionAuthentication",
+        "apps.core.authentication.SessionAuthentication",
     ],
     # Deny by default: each public endpoint opts in with AllowAny.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -174,12 +194,13 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 24,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "apps.core.exceptions.problem_details_exception_handler",
+    # Must match TRUSTED_PROXY_COUNT (None would make DRF trust any X-Forwarded-For).
+    "NUM_PROXIES": TRUSTED_PROXY_COUNT,
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {"anon": "120/min", "user": "240/min"},
-    "UNAUTHENTICATED_USER": "django.contrib.auth.models.AnonymousUser",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -225,8 +246,6 @@ X_FRAME_OPTIONS = "DENY"
 
 # Content Security Policy for responses Django serves (API JSON and Django admin).
 # The storefront's own CSP is set by Next.js (risk R-9).
-from django.utils.csp import CSP  # noqa: E402
-
 SECURE_CSP = {
     "default-src": [CSP.SELF],
     "img-src": [CSP.SELF, "data:"],
@@ -268,7 +287,11 @@ LOGGING = {
         "redact_personal_data": {"()": "apps.core.logging.RedactPersonalDataFilter"},
     },
     "formatters": {
-        "standard": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"},
+        # Redacts the complete output, including tracebacks.
+        "standard": {
+            "()": "apps.core.logging.RedactingFormatter",
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+        },
     },
     "handlers": {
         "console": {
@@ -282,5 +305,8 @@ LOGGING = {
         "django": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
         "django.security": {"handlers": ["console"], "level": "WARNING", "propagate": False},
         "apps": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
+        # Outbound request URLs can carry tokens; log them only on problems.
+        "httpx": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "httpcore": {"handlers": ["console"], "level": "WARNING", "propagate": False},
     },
 }

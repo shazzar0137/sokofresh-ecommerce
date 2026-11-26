@@ -1,0 +1,15 @@
+# gitleaks configuration: the default rules, plus a narrow allow list for the
+# fictional development/test values that are deliberately in the repository
+# (review finding QA-8). Never add a real secret pattern here.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fictional development, test and CI values (not secrets)"
+regexes = [
+  '''dev-only-insecure-key-not-for-production-use-0123456789abcdef''',
+  '''test-only-insecure-key-0123456789abcdef0123456789''',
+  '''sokofresh-local-dev''',
+  '''ci-only-password''',
+  '''a-long-(staff|dev)-password-1''',
+]
