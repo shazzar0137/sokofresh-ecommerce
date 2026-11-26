@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { EmptyState } from "@/components/common/states";
 import { PageContainer } from "@/components/layout/page-container";
+import { SearchSummary } from "@/features/search/search-summary";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Shop" };
@@ -12,18 +13,6 @@ export const metadata: Metadata = { title: "Shop" };
  * Catalogue placeholder (Phase 3). The real product grid, categories and
  * search results arrive with the catalogue API in Phase 4.
  */
-async function SearchSummary({ searchParams }: { searchParams: Promise<{ q?: string | string[] }> }) {
-  const { q } = await searchParams;
-  const query = (Array.isArray(q) ? q[0] : q)?.trim().slice(0, 100);
-  if (!query) return null;
-  // React escapes this text, so a search term can never inject HTML.
-  return (
-    <p className="mb-4 text-sub text-ink-muted">
-      You searched for <strong className="text-ink">“{query}”</strong>.
-    </p>
-  );
-}
-
 export default function ShopPage({ searchParams }: PageProps<"/shop">) {
   return (
     <PageContainer className="py-12 md:py-16">

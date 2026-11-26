@@ -19,7 +19,7 @@ import type { paths } from "./schema";
 export const DEFAULT_TIMEOUT_MS = 15_000;
 
 export interface ApiClientOptions {
-  /** "" in the browser (same origin); the backend origin on the server. */
+  /** The page's origin in the browser; the backend origin on the server. */
   baseUrl?: string;
   timeoutMs?: number;
   fetch?: typeof fetch;
@@ -79,8 +79,14 @@ export function createApiClient(options: ApiClientOptions = {}) {
   return client;
 }
 
-/** The browser client. */
-export const api = createApiClient();
+/**
+ * The browser client: same origin as the page. The origin is explicit (not a
+ * relative URL) because Node's fetch, used during server rendering and in
+ * tests, cannot resolve relative URLs.
+ */
+export const api = createApiClient({
+  baseUrl: typeof window === "undefined" ? "" : window.location.origin,
+});
 
 interface FetchResultLike<T> {
   data?: T;
