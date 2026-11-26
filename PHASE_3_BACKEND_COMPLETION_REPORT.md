@@ -122,7 +122,8 @@ See `backend/documentation/security/SECURITY.md` (controls, each with the test t
 |---|---|
 | `620f0a6` | Scaffold Django backend foundations (Phase 3) |
 | `20f316c` | Add backend CI workflow (GitHub Actions) |
-| (third commit) | Document Phase 3 backend foundations: ADR-0014, guides, PROJECT_STATE, report |
+| `44f4b67` | Document Phase 3 backend foundations |
+| (this commit) | Record commit hashes in the completion report |
 
 GitHub links will exist only after the owner pushes (§10): branch `https://github.com/shazzar0137/sokofresh-ecommerce/tree/feature/phase-3-foundations`, CI under the repository's **Actions** tab.
 
@@ -134,7 +135,7 @@ In **PowerShell**, in the project folder (`cd C:\Users\danie\OneDrive\Documents\
 2. Check the bundle: `git bundle verify tmp\phase-3-foundations.bundle` should end with `is okay`.
 3. Bring in the branch: `git fetch tmp\phase-3-foundations.bundle feature/phase-3-foundations:feature/phase-3-foundations`
 4. Switch to it: `git switch feature/phase-3-foundations`
-5. Check: `git log --oneline -4` shows the three commits above, then `965e047 Initial commit`.
+5. Check: `git log --oneline -5` shows the four branch commits (newest first), then `965e047 Initial commit`.
 6. Push (uses your existing SSH key): `git push -u origin feature/phase-3-foundations`
 7. On GitHub, open the repository → **Actions** tab → **Backend CI**, and check that all four jobs show a green tick.
 8. Optional: delete the bundle file: `del tmp\phase-3-foundations.bundle`.

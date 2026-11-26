@@ -39,7 +39,7 @@ Authoritative current architecture: `docs/architecture/SYSTEM_ARCHITECTURE.md`. 
 
 - Phase 1 structure and documentation (`PHASE_1_COMPLETION_REPORT.md`); design PDF and Figma file in `assets/design-references/`.
 - Phase 2: research record (+ addenda), requirements baseline v0.3, frontend analysis (accepted, amended), backend analysis (accepted with amendments), consolidated proposal (approved), ADR-0001 to ADR-0013, approved roadmap and testing strategy.
-- Phase 3 backend (branch `feature/phase-3-foundations`, commits `620f0a6`, `20f316c` + documentation commit): Django 6.1.3 project with uv, settings split, ten apps, phone-based custom user model before the first migration, role groups, allauth headless phone-code sign-in foundation, RFC 9457 errors, `/api/v1/health`, generated contract in `shared/contracts/openapi.yaml` with drift check, outbound-HTTP allow list, log redaction, 89 passing tests on PostgreSQL, GitHub Actions workflow (not yet run), ADR-0014.
+- Phase 3 backend (branch `feature/phase-3-foundations`, commits `620f0a6`, `20f316c`, `44f4b67` + a report fix-up): Django 6.1.3 project with uv, settings split, ten apps, phone-based custom user model before the first migration, role groups, allauth headless phone-code sign-in foundation, RFC 9457 errors, `/api/v1/health`, generated contract in `shared/contracts/openapi.yaml` with drift check, outbound-HTTP allow list, log redaction, 89 passing tests on PostgreSQL, GitHub Actions workflow (not yet run), ADR-0014.
 
 ## Outstanding
 
