@@ -18,6 +18,15 @@ logs/*
 # --- Dependency directories ---
 node_modules/
 vendor/
+.venv/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+backend/staticfiles/
 
 # --- Build and coverage output ---
 dist/

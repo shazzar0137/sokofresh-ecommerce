@@ -1,0 +1,23 @@
+{
+  "description": "Shared phone-number test list (ADR-0011 item 11). Used by backend and frontend tests so both sides agree on which inputs are accepted. These numbers are for tests only: no SMS is ever sent to them. Add cases here, not in individual test files.",
+  "valid": [
+    {"input": "0712345678", "e164": "+254712345678", "note": "07 prefix"},
+    {"input": "0712 345 678", "e164": "+254712345678", "note": "spaces"},
+    {"input": "+254 712 345 678", "e164": "+254712345678", "note": "international with spaces"},
+    {"input": "+254712345678", "e164": "+254712345678", "note": "already E.164"},
+    {"input": "254712345678", "e164": "+254712345678", "note": "country code without plus"},
+    {"input": "0700000001", "e164": "+254700000001", "note": "070 range"},
+    {"input": "0110123456", "e164": "+254110123456", "note": "011 prefix (newer Safaricom range)"},
+    {"input": "0100123456", "e164": "+254100123456", "note": "010 prefix"},
+    {"input": "0757-000-001", "e164": "+254757000001", "note": "dashes"}
+  ],
+  "invalid": [
+    {"input": "", "note": "empty"},
+    {"input": "abc", "note": "not a number"},
+    {"input": "071234567", "note": "too short"},
+    {"input": "07123456789", "note": "too long"},
+    {"input": "0201234567", "note": "Nairobi landline, not mobile"},
+    {"input": "+255712345678", "note": "Tanzanian mobile"},
+    {"input": "+14155550100", "note": "US number"}
+  ]
+}

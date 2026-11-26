@@ -1,0 +1,52 @@
+[project]
+name = "sokofresh-backend"
+version = "0.1.0"
+description = "SokoFresh backend: Django + Django REST Framework modular monolith"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "django>=6.1.3,<6.2",
+    "django-allauth[headless]>=65.23.0",
+    "django-environ>=0.14.0",
+    "django-tasks-db>=0.13.0",
+    "djangorestframework>=3.18.3",
+    "drf-spectacular>=0.30.0",
+    "httpx>=0.29.0",
+    "phonenumbers>=9.0.44",
+    "psycopg[binary]>=3.3.9",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "factory-boy>=3.3.3",
+    "pip-audit>=2.10.1",
+    "pytest>=9.2.0",
+    "pytest-django>=4.14.0",
+    "respx>=0.23.1",
+    "ruff>=0.17.6",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+testpaths = ["apps", "tests"]
+python_files = ["test_*.py"]
+addopts = ["--strict-markers", "-ra", "--import-mode=importlib"]
+filterwarnings = ["error::RuntimeWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["**/migrations/*.py"]
+
+[tool.ruff.lint]
+# E/F: errors; I: import order; B: likely bugs; UP: modern syntax; DJ: Django rules;
+# S: security (bandit rules); T20: no print(); BLE: no bare except Exception.
+select = ["E", "F", "I", "B", "UP", "DJ", "S", "T20", "BLE"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests use assert and fixed fake secrets.
+"**/tests/**" = ["S101", "S105", "S106"]
+"tests/**" = ["S101", "S105", "S106", "S603"]
