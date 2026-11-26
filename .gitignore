@@ -1,0 +1,45 @@
+# --- Secrets and environment files (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials*.json
+
+# --- Logs ---
+logs/*
+!logs/.gitkeep
+!logs/README.md
+*.log
+
+# --- Dependency directories ---
+node_modules/
+vendor/
+
+# --- Build and coverage output ---
+dist/
+build/
+out/
+coverage/
+tests/reports/*
+!tests/reports/.gitkeep
+
+# --- Editors and IDEs ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*~
+
+# --- Operating system files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Temporary files ---
+tmp/
+temp/
+*.tmp
