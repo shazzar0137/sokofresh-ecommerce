@@ -19,6 +19,19 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
 if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS must list the site's host names.")
 
+# The browser reaches Django through the Next.js rewrite (ADR-0011 item 3), so
+# Django sees its own host name but the browser's Origin (the storefront). The
+# storefront origin must be trusted explicitly, or every sign-in POST fails the
+# CSRF origin check (Phase 3 integration review INT-1, contract point F-8).
+CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
+if not CSRF_TRUSTED_ORIGINS or not all(
+    re.fullmatch(r"https://[a-z0-9.-]+(:[0-9]{1,5})?", origin) for origin in CSRF_TRUSTED_ORIGINS
+):
+    raise ImproperlyConfigured(
+        "DJANGO_CSRF_TRUSTED_ORIGINS must list the storefront origin(s), for example "
+        "'https://www.sokofresh.co.ke' (https, lower case, no path, no wildcard)."
+    )
+
 # Same rules as Django's security.W009 check, enforced at start-up.
 if (
     len(SECRET_KEY) < 50

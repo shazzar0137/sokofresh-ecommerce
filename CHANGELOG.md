@@ -2,6 +2,18 @@
 
 All notable changes to this project are recorded here. Newest entries first.
 
+## [Phase 3 integration review] - 2026-11-27 (branch `fix/phase-3-integration-review`, not merged)
+
+### Fixed
+- Production settings now require `DJANGO_CSRF_TRUSTED_ORIGINS` (sign-in through the Next.js rewrite failed CSRF), with refusal and rewrite tests (KI-019).
+
+### Added
+- Backend coverage measured in CI with an 85% minimum (`[tool.coverage]` in `backend/pyproject.toml`).
+- `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md`.
+
+### Changed
+- PROJECT_STATE corrected: Phase 3 merged to `main` via PR #1; KI-019 to KI-021 added.
+
 ## [Phase 3 frontend] - 2026-11-27 (branch `feature/phase-3-foundations`)
 
 ### Added

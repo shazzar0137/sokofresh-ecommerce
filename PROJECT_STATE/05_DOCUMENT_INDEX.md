@@ -44,6 +44,7 @@ Paths are relative to the project root. Update this index whenever a document is
 | `backend/documentation/api/API.md` | API conventions as implemented, error format, endpoints, sign-in flow, contract regeneration |
 | `backend/documentation/database/DATABASE.md` | Database configuration, tables, custom user model, migrations |
 | `backend/documentation/security/SECURITY.md` | Backend security controls with their tests, and known gaps |
+| `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md` | Phase 3 integration review (Architect): agents, findings, test results, corrections, risks, approval status |
 | `backend/documentation/quality/BACKEND_REVIEW_REPORT.md` | Independent post-implementation review of the Phase 3 backend: agents, findings, tests, coverage, corrections, outstanding issues, assessment |
 | `shared/documentation/CONTRACTS.md` | How the generated OpenAPI contract is shared; points F-1 to F-7 and the Frontend's response (F-8) |
 | `PHASE_3_FRONTEND_COMPLETION_REPORT.md` | Phase 3 frontend: files, dependencies, configuration, tokens, API readiness, tests, security, Git, remaining issues |

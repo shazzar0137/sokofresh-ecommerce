@@ -86,8 +86,12 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.test
       # Includes the OpenAPI drift check (tests/contract) and the production
       # `check --deploy` run (tests/integration/test_settings.py).
-      - name: Run tests
-        run: uv run pytest
+      - name: Run tests (with coverage)
+        run: uv run coverage run -m pytest
+      # Minimum coverage of application code; settings in pyproject.toml
+      # [tool.coverage] (Phase 3 integration review).
+      - name: Coverage report and minimum
+        run: uv run coverage report
 
   dependency-audit:
     name: Dependency audit (pip-audit)

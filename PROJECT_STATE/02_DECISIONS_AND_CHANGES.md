@@ -4,6 +4,8 @@ Approved decisions and significant changes, newest first. Formal technology deci
 
 | ID | Date | Decision / change | Status | Reason |
 |---|---|---|---|---|
+| D-051 | 2026-11-27 | Integration review correction INT-1: production settings require `DJANGO_CSRF_TRUSTED_ORIGINS` (https storefront origins); backend coverage measured in CI with an 85% minimum | Done on `fix/phase-3-integration-review` (PR, not merged) | Quality gate |
+| D-050 | 2026-11-27 | Phase 3 merged to `main` by the owner via PR #1 (all CI green), before the Architect's integration review | Fact (owner action) | Integration review then run against the merged commit `b2ed918` |
 | D-049 | 2026-11-27 | Treat every item in an analysis's decision list that the owner did not comment on as approved | Approved (owner) | Owner instruction |
 | D-048 | 2026-11-27 | Vercel Analytics remains the analytics candidate; not installed until hosting (ADR-0007) and a privacy check are settled | Approved (owner) | ADR-0009 updated |
 | D-047 | 2026-11-27 | Pantry and other extra categories left for later (FU-1 in `docs/FUTURE_UPDATES.md`, new register) | Approved (owner) | Owner comment on analysis §11 |

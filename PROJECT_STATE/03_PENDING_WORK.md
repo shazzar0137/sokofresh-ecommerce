@@ -5,7 +5,11 @@ _Updated 2026-11-27. Phase 3 backend and frontend foundations built on `feature/
 ## Owner decisions and actions
 - [x] Go-ahead for Phase 3 (Foundations) (2026-11-26).
 - [x] Claude GitHub App installed; branch pushed; CI green (2026-11-27).
-- [ ] **Review and merge** `feature/phase-3-foundations` by pull request. Older note: push (`PHASE_3_BACKEND_COMPLETION_REPORT.md` §10); check CI; review; merge by pull request.
+- [x] `feature/phase-3-foundations` merged to `main` by the owner (PR #1, 2026-11-27).
+- [ ] **Review** `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md` and the correction PR `fix/phase-3-integration-review`; merge only after the independent agent re-review.
+- [ ] Enable branch protection on `main` with required checks (KI-020).
+- [ ] Update the local folder: `git pull` on `main` (KI-021); delete `tmp/phase-3-foundations.bundle`.
+- [ ] Confirm ADR-0014 (items 1–21) and D-046 (frontend choices), both "owner to confirm".
 - [ ] Confirm ADR-0014 (backend foundation choices, items 1–21).
 - [ ] Decide KI-011 (customer deletion vs phone constraint) **before Phase 4**.
 - [ ] Decide KI-013 (admin static files in production, e.g. WhiteNoise).

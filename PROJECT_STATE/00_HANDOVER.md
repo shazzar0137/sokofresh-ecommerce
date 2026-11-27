@@ -1,6 +1,8 @@
 # 00 Handover
 
-_Last updated: 2026-11-27 (Phase 3 backend **and frontend** foundations built and independently reviewed on `feature/phase-3-foundations`; **pushed to GitHub, all CI green**; not merged)_
+_Last updated: 2026-11-27 (Phase 3 **merged to `main` by the owner via PR #1** at 06:16; Phase 3 integration review in progress on `fix/phase-3-integration-review`)_
+
+> **Integration quality gate (2026-11-27): NOT yet passed.** Phase 3 was merged before the integration review. Review: `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md`. Corrections are on `fix/phase-3-integration-review` (pull request, not merged). **Phase 4 is not authorised** until the owner reviews that report and the independent agent re-review is done.
 
 > **GitHub:** the Claude GitHub App is installed (2026-11-27); Claude can push feature branches. Branch `feature/phase-3-foundations` is on GitHub with all three workflows green. Owner reviews and merges by pull request.
 >
@@ -63,7 +65,7 @@ Authoritative current architecture: `docs/architecture/SYSTEM_ARCHITECTURE.md`. 
 
 ## Next action
 
-1. Owner reviews `feature/phase-3-foundations` on GitHub and merges by pull request (CI green).
+1. Owner reviews `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md` and the correction pull request (`fix/phase-3-integration-review`); enables branch protection on `main` (KI-020).
 2. Backend: read frontend contract response F-1 to F-8 (`shared/documentation/CONTRACTS.md`), especially F-8 and KI-014 (proxy headers).
 3. Owner/Architect: decide KI-011 and KI-013; confirm ADR-0014 (items 1–21).
 4. Phase 4 catalogue slice (backend API first, then frontend catalogue with a mapper from generated types to card props), only after the above. Explain each new package before installing.

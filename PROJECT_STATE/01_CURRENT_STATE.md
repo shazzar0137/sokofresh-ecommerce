@@ -11,14 +11,14 @@ _Last verified: 2026-11-27 (Phase 3 backend and frontend after independent revie
 | Design reference | `assets/design-references/`: PDF (3,389,791 bytes) and `.fig` file |
 | Requirements | `docs/requirements/REQUIREMENTS_BASELINE.md` v0.3 (owner answers recorded) |
 | Architecture | `docs/architecture/SYSTEM_ARCHITECTURE.md` (approved baseline); `TECHNICAL_ARCHITECTURE_PROPOSAL_2026-11.md` (approved decision record) |
-| ADRs | 0001–0013: all Accepted (0001, 0004 amended by 0011; 0006 amended by 0012; 0007 accepted as revised) |
+| ADRs | 0001–0013: all Accepted (0001, 0004 amended by 0011; 0006 amended by 0012; 0007 accepted as revised). 0014 (backend foundation choices): accepted under delegated authority, **owner to confirm** |
 | Frontend design | `frontend/documentation/architecture/FRONTEND_ANALYSIS_2026-11.md` (accepted, amendments A-1 to A-14) |
 | Backend design | `backend/documentation/architecture/BACKEND_ANALYSIS_2026-11.md` (accepted, amendments B-1 to B-16) |
 | Testing | `docs/testing/TESTING_STRATEGY.md` (approved) |
 | Roadmap | `docs/IMPLEMENTATION_ROADMAP.md` (approved) |
-| Git | `main` = `origin/main` = `965e047`. Branch `feature/phase-3-foundations` **on GitHub** (pushed 2026-11-27); not merged. The owner's local folder is still on `main`: run `git fetch` then `git switch feature/phase-3-foundations` to see the work locally |
+| Git | `origin/main` = `0e6c91d`: **PR #1 merged by the owner on 2026-11-27 06:16** (before the integration review). `main` has **no branch protection** (KI-020). Integration-review corrections on `fix/phase-3-integration-review` (PR, not merged). **The owner's local folder is still at `965e047` with pre-Phase-3 files** (KI-021): run `git pull` on `main` |
 
-## Verified on branch `feature/phase-3-foundations` (not yet merged)
+## Phase 3 as merged to `main` (PR #1; integration review: `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md`)
 
 | Item | State |
 |---|---|
