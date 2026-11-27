@@ -170,7 +170,7 @@ def test_the_attempt_is_recorded_before_the_password_is_checked(client, monkeypa
     from allauth.core import ratelimit
     from django.contrib.admin import AdminSite
 
-    from apps.core.admin_site import ADMIN_LOGIN_FAILED_ACTION
+    from apps.core.admin_site import ADMIN_LOGIN_ACCOUNT_ACTION
 
     User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
     for _ in range(4):
@@ -180,7 +180,7 @@ def test_the_attempt_is_recorded_before_the_password_is_checked(client, monkeypa
 
     def spy(self, request, extra_context=None):
         seen["room_left"] = ratelimit.consume(
-            request, action=ADMIN_LOGIN_FAILED_ACTION, key="+254712345678", dry_run=True
+            request, action=ADMIN_LOGIN_ACCOUNT_ACTION, key="+254712345678", dry_run=True
         )
         return original(self, request, extra_context)
 
@@ -198,7 +198,27 @@ def test_a_successful_login_clears_earlier_typos(client):
     assert [_admin_login(client).status_code for _ in range(6)] == [200] * 5 + [429]
 
 
-def test_successful_admin_logins_are_not_counted(client):
+def test_a_successful_login_does_not_reset_the_ip_counter(client):
+    """RR-11: one valid password must not buy an address unlimited guesses."""
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    for i in range(9):
+        assert _admin_login(client, phone=f"07120000{i:02d}").status_code == 200
+    assert _admin_login(client, password="a-long-staff-password-1").status_code == 302
+    client.logout()
+    assert _admin_login(client, phone="0712000099").status_code == 429
+
+
+def test_refusals_for_one_account_do_not_use_up_the_ip_allowance(client):
+    """RR-12: a blocked account's extra attempts do not count against the address."""
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    for _ in range(5):
+        _admin_login(client)
+    for _ in range(10):
+        assert _admin_login(client).status_code == 429
+    assert _admin_login(client, phone="0712000001").status_code == 200
+
+
+def test_successful_admin_logins_are_not_counted_against_the_account(client):
     User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
     for _ in range(8):
         assert _admin_login(client, password="a-long-staff-password-1").status_code == 302

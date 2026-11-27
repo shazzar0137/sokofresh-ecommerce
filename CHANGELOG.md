@@ -2,17 +2,24 @@
 
 All notable changes to this project are recorded here. Newest entries first.
 
-## [Phase 3 integration review] - 2026-11-27 (branch `fix/phase-3-integration-review`, not merged)
+## [Phase 3 integration review] - 2026-11-27 (branch `fix/phase-3-integration-review`, PR #2, not merged)
 
 ### Fixed
-- Production settings now require `DJANGO_CSRF_TRUSTED_ORIGINS` (sign-in through the Next.js rewrite failed CSRF), with refusal and rewrite tests (KI-019).
+- Production settings require `DJANGO_CSRF_TRUSTED_ORIGINS` (sign-in through the Next.js rewrite failed CSRF, KI-019), validated with `urllib`; `ALLOWED_HOSTS` refuses wildcards.
+- Django admin login limits password attempts per IP and per account (normalised phone number), recorded before the password check.
+- allauth's API password login and password re-authentication routes are shadowed (404).
+- Frontend phone check matches the backend's Kenyan mobile ranges.
 
 ### Added
-- Backend coverage measured in CI with an 85% minimum (`[tool.coverage]` in `backend/pyproject.toml`).
+- Production refuses to start without `DJANGO_ACCEPT_ADMIN_WITHOUT_MFA=true` until admin MFA exists (Phase 5).
+- Real-stack CI workflow and `tests/end-to-end/real-stack-smoke.sh` (real Django with production settings behind `next start`).
+- Backend tests: real `prod.py` CSRF check; allauth contract values pinned against `frontend/src/api/csrf.ts`.
+- Backend coverage in CI: 85% minimum, branch coverage, subprocess-run settings measured.
 - `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md`.
 
 ### Changed
-- PROJECT_STATE corrected: Phase 3 merged to `main` via PR #1; KI-019 to KI-021 added.
+- CI: no path filters on pull requests; runs on `main` are never cancelled.
+- Stale documentation corrected (README, PROJECT_STATUS, architecture, tests README, testing strategy, decisions file, security docs); PROJECT_STATE updated; ADR-0014 and D-046 confirmed by the owner.
 
 ## [Phase 3 frontend] - 2026-11-27 (branch `feature/phase-3-foundations`)
 

@@ -1,6 +1,6 @@
 # 0014. Backend foundation choices made during the Phase 3 scaffold
 
-- Status: Accepted under the owner's Phase 3 delegated authority (2026-11-26); **owner to confirm**
+- Status: **Accepted** (made under the owner's Phase 3 delegated authority 2026-11-26; confirmed by the owner 2026-11-27, D-052)
 - Date: 2026-11-26
 - Decided by: Backend Specialist conversation, under the Phase 3 instruction "for ordinary reversible technical decisions within the approved architecture, make the most reasonable decision, document the reasoning and continue"
 
@@ -26,7 +26,7 @@ ADR-0010 left some choices open ("verify at scaffold"), and building the foundat
 
 ## Additions after the independent review (2026-11-27)
 
-Made under the same delegated authority, to fix review findings (`backend/documentation/quality/BACKEND_REVIEW_REPORT.md`). All reversible; owner to confirm.
+Made under the same delegated authority, to fix review findings (`backend/documentation/quality/BACKEND_REVIEW_REPORT.md`). All reversible; confirmed by the owner 2026-11-27 (D-052).
 
 | # | Decision | Why |
 |---|---|---|

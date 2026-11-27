@@ -1,6 +1,6 @@
 # 01 Current State
 
-_Last verified: 2026-11-27 (Phase 3 backend and frontend after independent review)_
+_Last verified: 2026-11-27 afternoon (Phase 3 on `main`; integration-review corrections on PR #2)_
 
 ## Verified on disk
 
@@ -11,12 +11,12 @@ _Last verified: 2026-11-27 (Phase 3 backend and frontend after independent revie
 | Design reference | `assets/design-references/`: PDF (3,389,791 bytes) and `.fig` file |
 | Requirements | `docs/requirements/REQUIREMENTS_BASELINE.md` v0.3 (owner answers recorded) |
 | Architecture | `docs/architecture/SYSTEM_ARCHITECTURE.md` (approved baseline); `TECHNICAL_ARCHITECTURE_PROPOSAL_2026-11.md` (approved decision record) |
-| ADRs | 0001–0013: all Accepted (0001, 0004 amended by 0011; 0006 amended by 0012; 0007 accepted as revised). 0014 (backend foundation choices): accepted under delegated authority, **owner to confirm** |
+| ADRs | 0001–0013: all Accepted (0001, 0004 amended by 0011; 0006 amended by 0012; 0007 accepted as revised). 0014 (backend foundation choices): Accepted, owner confirmed 2026-11-27 (D-052) |
 | Frontend design | `frontend/documentation/architecture/FRONTEND_ANALYSIS_2026-11.md` (accepted, amendments A-1 to A-14) |
 | Backend design | `backend/documentation/architecture/BACKEND_ANALYSIS_2026-11.md` (accepted, amendments B-1 to B-16) |
 | Testing | `docs/testing/TESTING_STRATEGY.md` (approved) |
 | Roadmap | `docs/IMPLEMENTATION_ROADMAP.md` (approved) |
-| Git | `origin/main` = `0e6c91d`: **PR #1 merged by the owner on 2026-11-27 06:16** (before the integration review). `main` has **no branch protection** (KI-020). Integration-review corrections on `fix/phase-3-integration-review` (PR, not merged). **The owner's local folder is still at `965e047` with pre-Phase-3 files** (KI-021): run `git pull` on `main` |
+| Git | `origin/main` = `0e6c91d`: PR #1 merged by the owner on 2026-11-27 06:16 (before the integration review). `main` has **no branch protection** (KI-020). Integration-review corrections on `fix/phase-3-integration-review` (PR #2, not merged). The owner's local folder was updated to `0e6c91d` with `git pull` on 2026-11-27 (KI-021 resolved; some empty old folders remain, harmless) |
 
 ## Phase 3 as merged to `main` (PR #1; integration review: `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md`)
 
@@ -27,19 +27,18 @@ _Last verified: 2026-11-27 (Phase 3 backend and frontend after independent revie
 | Custom user model | `accounts.User` (phone login, E.164 CHECK, optional unique email); migrations `accounts.0001`, `0002` (role groups) |
 | Sign-in | allauth headless phone + code for existing **customer** accounts; sign-up closed; staff refused code sign-in; admin requires password sign-in on the admin page; unused allauth routes shadowed; SMS: console (dev), in-memory (tests), refusing (prod) |
 | API | `GET /api/v1/health`; RFC 9457 errors; contract `shared/contracts/openapi.yaml` generated, drift-checked |
-| Tests | **211** pytest tests, **all passing** on PostgreSQL 16.15 (2026-11-27), also in random order and in parallel; coverage 94% (incl. subprocess-run production settings); ruff clean; pip-audit: no known vulnerabilities |
+| Tests | On `main`: 211 pytest tests passing. **On PR #2: 272 passing** on PostgreSQL 16.15 (2026-11-27); branch coverage 96% including the subprocess-run production settings (CI minimum 85%); ruff clean; pip-audit: no known vulnerabilities |
 | Independent review | Done 2026-11-27: `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`. All High findings fixed and re-reviewed; 4 Medium items open (KI-011, KI-012, KI-013, API-4) |
 | Backend CI | `.github/workflows/backend-ci.yml` and `secret-scan.yml`: passed on GitHub 2026-11-27 |
 | Docs | backend README, developer guide, API, database, security docs; ADR-0014; `PHASE_3_BACKEND_COMPLETION_REPORT.md` |
 | Frontend app | `frontend/`: Next.js 16.4.6 (App Router, `cacheComponents`), React 19.3.1, TypeScript 5.9.3, Tailwind 4.3.3, radix-ui, TanStack Query 5, openapi-fetch 0.17 + generated `src/api/schema.d.ts`, React Hook Form + Zod 4, MSW 3 (dev only); npm, Node 24; `src/pages/` and `src/routes/` removed (KI-003 resolved) |
 | Frontend routes | `/`, `/shop`, `/basket` (placeholders: no catalogue or basket yet), `/design-system` (preview; 404 in production), 404, error boundaries |
-| Frontend tests | **343** Vitest (unit, component, integration with MSW, jsdom axe) + **53** Playwright (production build: navigation, headers, rewrites via stub backend, axe incl. contrast, 6 viewport widths) **all passing** 2026-11-27; coverage ≈99% lines with enforced thresholds; production-build check passes (initial JS 145 KB gzip); `npm audit` 0 vulnerabilities |
-| CI | Frontend CI, Backend CI and Secret scan **passed on GitHub** (first run, 2026-11-27, commit `bdc7011`) |
+| Frontend tests | **343** Vitest on `main`, **360 on PR #2** (unit, component, integration with MSW, jsdom axe) + **53** Playwright (production build: navigation, headers, rewrites via stub backend, axe incl. contrast, 6 viewport widths) **all passing** 2026-11-27; coverage ≈99% lines with enforced thresholds; production-build check passes (initial JS 145 KB gzip); `npm audit` 0 vulnerabilities |
+| CI | Frontend CI, Backend CI and Secret scan green on `main`. PR #2 adds **Real-stack CI** (real Django with production settings behind `next start`, `tests/end-to-end/real-stack-smoke.sh`) and removes the pull-request path filters; all four green on PR #2 |
 | Frontend review | `frontend/documentation/quality/FRONTEND_REVIEW_REPORT.md` |
 
 ## Not implemented (nothing below exists)
 
-- On `main`: no application code yet (the backend foundation is on the unmerged branch).
 - Frontend storefront features: catalogue, meal kits, basket, sign-in, checkout, delivery-area picker, tracking, rider screens (Phase 4 onward).
 - Business models and endpoints (catalogue, inventory, basket, orders, payments, delivery): Phase 4 onward.
 - Real SMS provider, account creation at checkout, staff MFA (Phase 5).
