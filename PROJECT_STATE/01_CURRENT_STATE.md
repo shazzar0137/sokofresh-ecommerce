@@ -16,7 +16,7 @@ _Last verified: 2026-11-27 (Phase 3 backend after independent review)_
 | Backend design | `backend/documentation/architecture/BACKEND_ANALYSIS_2026-11.md` (accepted, amendments B-1 to B-16) |
 | Testing | `docs/testing/TESTING_STRATEGY.md` (approved) |
 | Roadmap | `docs/IMPLEMENTATION_ROADMAP.md` (approved) |
-| Git | Local repo: `main` = `origin/main` = `965e047` (verified by reading `.git`). Branch `feature/phase-3-foundations` exists in the Claude workspace and as `tmp/phase-3-foundations.bundle` in the project folder; **not yet on GitHub** (KI-005) |
+| Git | `main` = `origin/main` = `965e047`. Branch `feature/phase-3-foundations` is **on GitHub** (backend commits `620f0a6`…`117c451`, then the frontend commits; verified 2026-11-27). No pull request yet |
 
 ## Verified on branch `feature/phase-3-foundations` (not yet merged)
 

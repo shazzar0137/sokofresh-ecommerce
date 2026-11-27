@@ -1,8 +1,8 @@
 # 00 Handover
 
-_Last updated: 2026-11-27 (Phase 3 backend foundations built **and independently reviewed**; corrections committed on `feature/phase-3-foundations`; not yet pushed)_
+_Last updated: 2026-11-27 (Phase 3 backend foundations built and independently reviewed; branch `feature/phase-3-foundations` **on GitHub**, with the Phase 3 frontend commits on top)_
 
-> **Blocking for the owner:** the branch could not be pushed from the Claude session (GitHub connector is read-only, KI-005). It is in the project folder as `tmp/phase-3-foundations.bundle` (**replaced 2026-11-27** with the reviewed version). Push it with the steps in `PHASE_3_BACKEND_COMPLETION_REPORT.md` §10.
+> **Branch on GitHub (2026-11-27):** `feature/phase-3-foundations` is pushed (KI-005 resolved). Open a pull request into `main` and check that the CI jobs are green before merging (KI-008).
 >
 > **Decisions needed before Phase 4:** KI-011 (customer deletion vs phone constraint) and KI-013 (admin static files). See `backend/documentation/quality/BACKEND_REVIEW_REPORT.md` §9.
 
@@ -20,7 +20,7 @@ Goal: a complete, secure, maintainable, production-ready application.
 
 ## Current phase
 
-**Phase 2 is complete.** **Phase 3 (Foundations) is in progress:** the owner authorised it on 2026-11-26. The **backend** foundation is built and tested on `feature/phase-3-foundations` (see `PHASE_3_BACKEND_COMPLETION_REPORT.md`). The frontend scaffold has not started (Frontend conversation).
+**Phase 2 is complete.** **Phase 3 (Foundations) is in progress:** the owner authorised it on 2026-11-26. The **backend** foundation is built and tested on `feature/phase-3-foundations` (see `PHASE_3_BACKEND_COMPLETION_REPORT.md`). Frontend Phase 3 commits are also on the branch (`5cb25b2`…`bdc7011`: Next.js 16 scaffold, test suites, frontend CI, review corrections); their status is recorded by the Frontend conversation.
 
 ## Approved architecture (summary)
 
@@ -46,8 +46,8 @@ Authoritative current architecture: `docs/architecture/SYSTEM_ARCHITECTURE.md`. 
 
 ## Outstanding
 
-- **Owner:** push the Phase 3 branch (report §10), check CI, review and merge by pull request; confirm ADR-0014; create the Neon development project; KRA PIN and ODPC registration (coming soon); real dispatch point; choose the delivery partner; Google Cloud billing account for Maps; slot times and cut-offs for slot areas. Accountant check of retention: future update.
-- Open known issues: KI-003, KI-004, KI-005 to KI-010 (`04_KNOWN_ISSUES.md`).
+- **Owner:** open a pull request from `feature/phase-3-foundations` into `main`, check CI, review and merge; confirm ADR-0014; create the Neon development project; KRA PIN and ODPC registration (coming soon); real dispatch point; choose the delivery partner; Google Cloud billing account for Maps; slot times and cut-offs for slot areas. Accountant check of retention: future update.
+- Open known issues: KI-003, KI-004, KI-006 to KI-013 (`04_KNOWN_ISSUES.md`); KI-005 resolved.
 
 ## Architectural constraints
 
@@ -60,7 +60,7 @@ Authoritative current architecture: `docs/architecture/SYSTEM_ARCHITECTURE.md`. 
 
 ## Next action
 
-1. Owner pushes the branch and checks the first CI run (fix anything GitHub's runners reveal).
+1. Owner opens a pull request into `main` and checks the first CI run (fix anything GitHub's runners reveal).
 2. Frontend conversation: Next.js scaffold (fix KI-003), design tokens, type generation from `shared/contracts/openapi.yaml`; confirm contract points F-1 to F-6 (`shared/documentation/CONTRACTS.md`).
 3. Owner/Architect: decide KI-011 and KI-013; confirm ADR-0014 (items 1–21).
 4. Backend: Phase 4 catalogue slice (see completion report §12), only after the above. Explain each new package before installing.
