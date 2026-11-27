@@ -65,9 +65,9 @@ uv run python manage.py migrate
 uv run python manage.py purge_expired_cache
 ```
 
-## Open design question (needs a decision before Phase 4 adds tables that reference users)
+## Design decision: deleted customers' phone numbers (D-055)
 
-**DB-4:** the approved deletion plan (backend analysis §3.5) replaces a deleted customer's phone with a one-way hash, but the phone column only accepts real Kenyan numbers (CHECK constraint, 16 characters), and keeping a hashed or old number would also block the number's next owner (Kenyan operators recycle numbers). Recommended: make `phone` nullable (unique when present) and keep the hash in a separate column. Recorded as KI-011.
+**DB-4 (decided 2026-11-27, D-055; not yet implemented):** the approved deletion plan (backend analysis §3.5) replaces a deleted customer's phone with a one-way hash, but the phone column only accepts real Kenyan numbers (CHECK constraint, 16 characters), and keeping a hashed or old number would also block the number's next owner (Kenyan operators recycle numbers). Decision: make `phone` nullable (unique when present, the Kenyan-number check only when present) and keep the hash in a separate column. Implemented as the first Phase 4 backend task (KI-011).
 
 ## Not yet done
 
