@@ -28,6 +28,17 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/api/schema.d.ts", "src/app/**/page.tsx", "src/app/**/layout.tsx", "src/mocks/browser.ts"],
       reporter: ["text-summary", "text", "json-summary"],
+      // CI fails if coverage drops (review QA-11). The API and utility layers carry
+      // the business-critical logic, so they have stricter limits.
+      thresholds: {
+        statements: 90,
+        branches: 85,
+        functions: 90,
+        lines: 90,
+        "src/api/**": { lines: 95, branches: 90 },
+        "src/utils/**": { lines: 95, branches: 90 },
+        "src/config/**": { lines: 95, branches: 90 },
+      },
     },
   },
 });

@@ -188,3 +188,64 @@ describe("CSRF on writes (contract point F-6)", () => {
     expect(header).toBeNull();
   });
 });
+
+describe("review follow-ups (QA-4, QA-8, ARCH-3)", () => {
+  it.each(["PUT", "PATCH", "DELETE"] as const)("adds the CSRF header on %s too", async (method) => {
+    document.cookie = "csrftoken=tok; path=/";
+    let header: string | null = null;
+    const handler = { PUT: http.put, PATCH: http.patch, DELETE: http.delete }[method];
+    server.use(
+      handler("*/api/v1/test-write", ({ request }) => {
+        header = request.headers.get(CSRF_HEADER_NAME);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const client = createApiClient({ baseUrl: ORIGIN }) as unknown as Record<string, (p: string, i?: object) => Promise<{ response: Response }>>;
+    const { response } = await client[method]!("/api/v1/test-write", {});
+    expect(response.status).toBe(204);
+    expect(header).toBe("tok");
+  });
+
+  it("does not let a hung CSRF bootstrap freeze a write: it gives up and the write still goes out", async () => {
+    server.use(
+      http.get(`*${CSRF_BOOTSTRAP_PATH}`, async () => {
+        await delay("infinite");
+        return HttpResponse.json({});
+      }),
+      http.post("*/api/v1/test-write", () => problemResponse(403, "csrf_failed")),
+    );
+    const started = Date.now();
+    const error = await captureError(
+      unwrap(untyped(createApiClient({ baseUrl: ORIGIN, timeoutMs: 80 })).POST("/api/v1/test-write", { body: {} })),
+    );
+    expect(error.code).toBe("csrf_failed");
+    expect(Date.now() - started).toBeLessThan(2000);
+  });
+
+  it("sends cookies only to the same origin (credentials: same-origin)", async () => {
+    let credentials: RequestCredentials | undefined;
+    server.use(
+      http.get("*/api/v1/health", ({ request }) => {
+        credentials = request.credentials;
+        return HttpResponse.json({ status: "ok", database: "ok" });
+      }),
+    );
+    await unwrap(createApiClient({ baseUrl: ORIGIN }).GET("/api/v1/health"));
+    expect(credentials).toBe("same-origin");
+  });
+
+  it("returns undefined for 204 No Content instead of an error", async () => {
+    document.cookie = "csrftoken=t; path=/";
+    server.use(http.delete("*/api/v1/test-write", () => new HttpResponse(null, { status: 204 })));
+    const client = createApiClient({ baseUrl: ORIGIN }) as unknown as { DELETE: (p: string) => Promise<{ data?: unknown; error?: unknown; response: Response }> };
+    await expect(unwrap(client.DELETE("/api/v1/test-write"))).resolves.toBeUndefined();
+  });
+
+  it("turns an unreadable 200 body (e.g. a captive-portal HTML page sent as JSON) into invalid_response", async () => {
+    server.use(
+      http.get("*/api/v1/health", () => new HttpResponse("<html>Login to Wi-Fi</html>", { status: 200, headers: { "Content-Type": "application/json" } })),
+    );
+    const error = await captureError(unwrap(createApiClient({ baseUrl: ORIGIN }).GET("/api/v1/health")));
+    expect(error.code).toBe("invalid_response");
+  });
+});

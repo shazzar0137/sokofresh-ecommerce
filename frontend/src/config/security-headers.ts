@@ -35,6 +35,9 @@ export function buildContentSecurityPolicy({ isDev, isHttps }: SecurityHeaderOpt
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     "script-src": ["'self'", "'unsafe-inline'", ...(isDev ? ["'unsafe-eval'"] : [])],
+    // Blocks inline event handlers such as <img onerror="…">, even though
+    // 'unsafe-inline' allows inline <script> elements (review SEC-2).
+    "script-src-attr": ["'none'"],
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:"],
     "font-src": ["'self'"],

@@ -1,5 +1,3 @@
-"use client";
-
 import { AlertTriangle, RotateCw } from "lucide-react";
 
 import { userMessageFor } from "@/api/errors";

@@ -92,7 +92,9 @@ export default function DesignSystemPage() {
         <div className="flex flex-col gap-4">
           <p className="font-display text-display font-extrabold">Picked at dawn.</p>
           <p className="font-display text-h1 font-extrabold">Fresh from the soko</p>
-          <p className="font-display text-h2 font-extrabold">Ugali na sukuma</p>
+          <p lang="sw" className="font-display text-h2 font-extrabold">
+            Ugali na sukuma
+          </p>
           <p className="font-display text-h3 font-extrabold">Named farms</p>
           <p className="font-display text-product font-extrabold">Sukuma wiki bunch</p>
           <Text variant="lead">Vegetables from Kinangop, mangoes from Kitui.</Text>
@@ -116,7 +118,7 @@ export default function DesignSystemPage() {
               <Button variant="ghost">Ghost</Button>
               <Button disabled>Disabled</Button>
             </div>
-            <div className="flex flex-wrap gap-3 rounded-panel bg-brand p-5">
+            <div className="surface-brand flex flex-wrap gap-3 rounded-panel bg-brand p-5">
               <Button variant="light">Add whole kit</Button>
             </div>
           </Demo>
@@ -153,7 +155,11 @@ export default function DesignSystemPage() {
                 stockIsLow={false}
                 tone="green"
                 media={<Emoji>🥬</Emoji>}
-                action={<Button size="sm">Add</Button>}
+                action={
+                  <Button size="sm" aria-label="Add Sukuma wiki bunch to basket">
+                    Add
+                  </Button>
+                }
               />
             </li>
             <li>
@@ -168,7 +174,11 @@ export default function DesignSystemPage() {
                 stockIsLow
                 tone="rose"
                 media={<Emoji>🍅</Emoji>}
-                action={<Button size="sm">Add</Button>}
+                action={
+                  <Button size="sm" aria-label="Add Tomatoes 1kg to basket">
+                    Add
+                  </Button>
+                }
               />
             </li>
             <li>
@@ -182,7 +192,7 @@ export default function DesignSystemPage() {
                 tone="mint"
                 media={<Emoji>🍵</Emoji>}
                 action={
-                  <Button size="sm" disabled>
+                  <Button size="sm" disabled aria-label="Add Kenya tea 250g to basket (sold out)">
                     Add
                   </Button>
                 }

@@ -29,11 +29,12 @@ export interface ApiClientOptions {
 
 function withTimeout(fetchImpl: typeof fetch, timeoutMs: number): typeof fetch {
   return async (input, init) => {
-    const request = new Request(input, init);
+    // openapi-fetch passes a Request plus extra init (e.g. Next.js `next: { tags }`): keep both.
+    const request = input instanceof Request ? input : new Request(input, init);
     const timeout = AbortSignal.timeout(timeoutMs);
     const signal = AbortSignal.any([request.signal, timeout]);
     try {
-      return await fetchImpl(new Request(request, { signal }));
+      return await fetchImpl(new Request(request, { signal }), input instanceof Request ? init : undefined);
     } catch (error) {
       if (timeout.aborted) {
         throw new ApiError({
@@ -56,11 +57,11 @@ function withTimeout(fetchImpl: typeof fetch, timeoutMs: number): typeof fetch {
   };
 }
 
-function csrfMiddleware(fetchImpl: typeof fetch): Middleware {
+function csrfMiddleware(fetchImpl: typeof fetch, timeoutMs: number): Middleware {
   return {
     async onRequest({ request }) {
       if (!isUnsafeMethod(request.method)) return undefined;
-      const token = await ensureCsrfToken(fetchImpl);
+      const token = await ensureCsrfToken(fetchImpl, timeoutMs);
       if (token) request.headers.set(CSRF_HEADER_NAME, token);
       return request;
     },
@@ -69,13 +70,14 @@ function csrfMiddleware(fetchImpl: typeof fetch): Middleware {
 
 export function createApiClient(options: ApiClientOptions = {}) {
   const fetchImpl = options.fetch ?? ((input, init) => globalThis.fetch(input, init));
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const client = createClient<paths>({
     baseUrl: options.baseUrl ?? "",
     credentials: "same-origin",
     headers: { Accept: "application/json, application/problem+json" },
-    fetch: withTimeout(fetchImpl, options.timeoutMs ?? DEFAULT_TIMEOUT_MS),
+    fetch: withTimeout(fetchImpl, timeoutMs),
   });
-  if (options.csrf ?? true) client.use(csrfMiddleware(fetchImpl));
+  if (options.csrf ?? true) client.use(csrfMiddleware(fetchImpl, timeoutMs));
   return client;
 }
 
@@ -99,7 +101,24 @@ interface FetchResultLike<T> {
  * ApiError, which is what TanStack Query expects from a query function.
  */
 export async function unwrap<T>(resultPromise: Promise<FetchResultLike<T>>): Promise<T> {
-  const { data, error, response } = await resultPromise;
+  let result: FetchResultLike<T>;
+  try {
+    result = await resultPromise;
+  } catch (error) {
+    // Errors after the response started, while openapi-fetch reads the body:
+    // e.g. HTML from a captive portal on mobile data (SyntaxError) or a
+    // timeout mid-download. Caller cancellations are passed through untouched.
+    if (error instanceof ApiError) throw error;
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    if (error instanceof DOMException && error.name === "TimeoutError") {
+      throw new ApiError({ status: 0, code: "timeout", title: "Request timed out", detail: "The response did not finish in time.", cause: error });
+    }
+    if (error instanceof SyntaxError) {
+      throw new ApiError({ status: 0, code: "invalid_response", title: "Unreadable response", detail: "The server's response could not be read.", cause: error });
+    }
+    throw new ApiError({ status: 0, code: "network_error", title: "Network error", detail: "The response could not be read.", cause: error });
+  }
+  const { data, error, response } = result;
   if (!response.ok) throw apiErrorFromResponse(response, error);
   if (data === undefined) {
     if (response.status === 204) return undefined as T;

@@ -39,13 +39,38 @@ const USER_MESSAGES: Record<ApiErrorCode, string> = {
   rate_limited: "Too many attempts. Please wait a moment and try again.",
   service_unavailable: "SokoFresh is briefly unavailable. Please try again in a few minutes.",
   server_error: "Something went wrong on our side. Please try again.",
-  error: "Something went wrong. Please try again.",
+  error: "Please try again in a moment.",
   network_error: "We couldn't reach SokoFresh. Check your connection and try again.",
   timeout: "This is taking too long. Check your connection and try again.",
   invalid_response: "Something went wrong on our side. Please try again.",
 };
 
-const KNOWN_CODES = new Set<string>(Object.keys(USER_MESSAGES));
+/**
+ * Codes the server may legitimately send (the contract's enum). Client-only
+ * codes such as "timeout" are excluded: a server body claiming them must not
+ * make a 4xx look retryable. `satisfies` keeps this list complete at compile time.
+ */
+const SERVER_CODE_TABLE = {
+  validation_error: true,
+  malformed_request: true,
+  bad_request: true,
+  not_authenticated: true,
+  authentication_failed: true,
+  permission_denied: true,
+  csrf_failed: true,
+  not_found: true,
+  method_not_allowed: true,
+  not_acceptable: true,
+  unsupported_media_type: true,
+  rate_limited: true,
+  service_unavailable: true,
+  server_error: true,
+  error: true,
+} satisfies Record<ProblemCode, true>;
+
+function isServerCode(code: string): code is ProblemCode {
+  return Object.prototype.hasOwnProperty.call(SERVER_CODE_TABLE, code);
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -139,7 +164,7 @@ export function apiErrorFromResponse(response: Response, body: unknown): ApiErro
   const retryAfterSeconds = parseRetryAfter(response.headers.get("Retry-After"));
 
   if (isProblemDetail(body)) {
-    const code: ApiErrorCode = KNOWN_CODES.has(body.code) ? (body.code as ProblemCode) : "error";
+    const code: ApiErrorCode = isServerCode(body.code) ? body.code : "error";
     return new ApiError({
       status: response.status,
       code,
@@ -150,14 +175,9 @@ export function apiErrorFromResponse(response: Response, body: unknown): ApiErro
     });
   }
 
-  const fallbackCode: ApiErrorCode =
-    response.status === 429
-      ? "rate_limited"
-      : response.status === 503
-        ? "service_unavailable"
-        : response.status >= 500
-          ? "server_error"
-          : "invalid_response";
+  // Not problem details (e.g. allauth's own format, or a proxy's HTML page):
+  // choose the code from the status so a 401 does not read as "our fault".
+  const fallbackCode: ApiErrorCode = fallbackCodeForStatus(response.status);
 
   return new ApiError({
     status: response.status,
@@ -166,6 +186,20 @@ export function apiErrorFromResponse(response: Response, body: unknown): ApiErro
     detail: `The server answered with status ${response.status}.`,
     retryAfterSeconds,
   });
+}
+
+export function fallbackCodeForStatus(status: number): ApiErrorCode {
+  if (status === 401) return "not_authenticated";
+  if (status === 403) return "permission_denied";
+  if (status === 404) return "not_found";
+  if (status === 405) return "method_not_allowed";
+  if (status === 415) return "unsupported_media_type";
+  if (status === 422) return "validation_error";
+  if (status === 429) return "rate_limited";
+  if (status === 503) return "service_unavailable";
+  if (status >= 500) return "server_error";
+  if (status >= 400) return "bad_request";
+  return "invalid_response"; // e.g. a 200 whose body could not be read
 }
 
 /** For any thrown value: a message that is safe and useful to show a customer. */

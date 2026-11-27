@@ -12,7 +12,7 @@ export default function HomePage() {
   return (
     <section aria-labelledby="hero-title" className="bg-cream py-12 md:py-20">
       <PageContainer>
-        <div className="max-w-[40rem]">
+        <div className="max-w-[47rem]">
           <h1 id="hero-title" className="font-display text-display font-extrabold text-ink">
             Picked at dawn. At your gate by evening.
           </h1>

@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
       "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
+  {
+    // Command-line helpers print progress on purpose.
+    files: ["scripts/**", "tests/e2e/support/**"],
+    rules: { "no-console": "off" },
+  },
   globalIgnores([
     ".next/**",
     "out/**",

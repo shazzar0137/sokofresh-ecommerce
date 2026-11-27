@@ -25,6 +25,15 @@ describe("SiteHeader", () => {
     expect(within(header).getByRole("link", { name: "Basket" })).toHaveAttribute("href", "/basket");
   });
 
+  it("puts the basket before the search in Tab order, matching the phone layout", () => {
+    render(<SiteHeader />);
+    const header = screen.getByRole("banner");
+    const order = [...header.querySelectorAll("a[href], input, button")].map(
+      (el) => el.getAttribute("aria-label") ?? el.getAttribute("name") ?? el.textContent,
+    );
+    expect(order).toEqual(["SokoFresh home", "Basket", "q", "Search"]);
+  });
+
   it("shows announcements only when given (store settings, Phase 4)", () => {
     const { rerender } = render(<SiteHeader />);
     expect(screen.queryByRole("list", { name: "Store announcements" })).not.toBeInTheDocument();
@@ -57,6 +66,12 @@ describe("SkipLink", () => {
   it("targets the main content", () => {
     render(<SkipLink />);
     expect(screen.getByRole("link", { name: "Skip to main content" })).toHaveAttribute("href", "#main-content");
+  });
+
+  it("keeps its padding when it becomes visible on focus (focus:not-sr-only resets padding)", () => {
+    render(<SkipLink />);
+    const cls = screen.getByRole("link").className.split(" ");
+    expect(cls).toEqual(expect.arrayContaining(["focus:not-sr-only", "focus:px-4", "focus:py-3"]));
   });
 });
 

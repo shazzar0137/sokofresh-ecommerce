@@ -7,7 +7,10 @@
  * time, which is why each one is read by its full name here.
  */
 
-export const siteUrl: string = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { DEFAULT_DEV_SITE_URL } from "./site-url";
+
+/** Validated at build time in next.config.ts (site-url.ts); here only read. */
+export const siteUrl: string = process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_DEV_SITE_URL;
 
 /**
  * MSW mock data is for development only (ADR-0009): production builds can

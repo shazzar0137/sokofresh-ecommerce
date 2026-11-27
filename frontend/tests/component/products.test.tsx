@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { PriceDisplay } from "@/components/products/price-display";
 import { ProductCard } from "@/components/products/product-card";
@@ -8,10 +8,15 @@ import { DiscountBadge, OriginLine, StockNote } from "@/components/products/prod
 const NBSP = " ";
 
 describe("PriceDisplay", () => {
-  it("shows the price and a struck-through old price with screen-reader 'was'", () => {
+  it("tells screen readers the old price with its currency, and hides the visual duplicate", () => {
     const { container } = render(<PriceDisplay price={30} wasPrice={50} />);
-    expect(container.textContent).toBe(`KES${NBSP}30, was 50`);
-    expect(container.querySelector("del")).toHaveTextContent("50");
+    expect(container.querySelector(".sr-only")?.textContent).toBe(`, was KES${NBSP}50`);
+    const del = container.querySelector("del");
+    expect(del).toHaveTextContent("50");
+    expect(del).toHaveAttribute("aria-hidden", "true");
+    // Card style: old price shown visually from the sm width only (mobile design).
+    expect(del?.className).toContain("hidden");
+    expect(del?.className).toContain("sm:inline");
   });
 
   it("uses the full currency for meal-kit style old prices", () => {
@@ -24,8 +29,17 @@ describe("PriceDisplay", () => {
     expect(container.querySelector("del")).toBeNull();
   });
 
-  it("refuses an invalid price instead of showing nonsense", () => {
-    expect(() => render(<PriceDisplay price={-30} />)).toThrow(RangeError);
+  it.each([-30, 12.5, Number.NaN])("shows 'Price unavailable' for an invalid price %s instead of crashing the page", (bad) => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { container } = render(<PriceDisplay price={bad} wasPrice={50} />);
+    expect(container).toHaveTextContent("Price unavailable");
+    expect(container).not.toHaveTextContent("KES");
+    expect(consoleError).toHaveBeenCalled();
+  });
+
+  it("ignores an invalid old price", () => {
+    const { container } = render(<PriceDisplay price={30} wasPrice={12.5} />);
+    expect(container.querySelector("del")).toBeNull();
   });
 });
 
@@ -85,10 +99,26 @@ describe("ProductCard", () => {
         action={<button type="button">Add</button>}
       />,
     );
-    const card = screen.getByRole("article");
+    const card = screen.getByRole("article", { name: "Tomatoes 1kg" });
     expect(within(card).getByRole("heading", { level: 3, name: "Tomatoes 1kg" })).toBeInTheDocument();
-    expect(card).toHaveTextContent(/Save 20%.*Tomatoes 1kg.*Nyanya.*from Kirinyaga.*Only 9 left today.*KES.120, was 150.*Add/);
+    expect(card).toHaveTextContent(/Save 20%.*Tomatoes 1kg.*Nyanya.*from Kirinyaga.*Only 9 left today.*KES.120, was KES.150.*Add/);
     expect(within(card).getByRole("button", { name: "Add" })).toBeInTheDocument();
     expect(card.querySelector(".bg-tile-rose")).not.toBeNull();
+  });
+});
+
+describe("ProductCard language", () => {
+  it("marks a Swahili product name", () => {
+    render(
+      <ProductCard
+        name="Sukuma wiki bunch"
+        nameLang="sw"
+        price={30}
+        stockRemaining={5}
+        stockIsLow={false}
+        media={null}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Sukuma wiki bunch" })).toHaveAttribute("lang", "sw");
   });
 });

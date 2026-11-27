@@ -30,3 +30,17 @@ _Created 2026-11-26 (Phase 3, Backend). For the Frontend conversation and the Pr
 | F-5 | No trailing slashes on `/api/v1/` paths | e.g. `/api/v1/health` |
 | F-7 | Sign-up, staff, phone change | Sign-up is closed until Phase 5 (403 for every number). Staff accounts cannot sign in with a code. `…/account/phone` is not available (404) |
 | F-6 | CSRF | Get the `csrftoken` cookie from `GET /_allauth/browser/v1/config` and send it as `X-CSRFToken` on every POST/PUT/PATCH/DELETE (same-origin via Next.js rewrites, ADR-0011 item 3) |
+
+## Frontend response (2026-11-27, Phase 3 frontend)
+
+| # | Frontend position | Where |
+|---|---|---|
+| F-1 | **Agreed and implemented.** Errors parsed as RFC 9457 with a runtime shape check; code switches on `code`; the enum becomes a TypeScript union, and the frontend's message table is typed `Record<code, string>`, so a new code is a compile error until it has wording. Unknown codes at runtime fall back to `error` | `frontend/src/api/errors.ts` |
+| F-2 | **Noted.** allauth endpoints are called through the same-origin rewrite; their error format will be handled separately when sign-in is built (Phase 5) | `frontend/next.config.ts` |
+| F-3 | **Agreed and implemented.** `normaliseKenyanMobile()` converts 07…/01…/254…/+254… to E.164 before calling allauth; tested against `shared/test-fixtures/phone-numbers.json` | `frontend/src/utils/phone.ts`, `frontend/tests/unit/phone.test.ts` |
+| F-4 | **Noted** for the sign-in UI (Phase 5): 6-digit code, 5 minutes, 3 attempts, `too_many_login_attempts` | — |
+| F-5 | **Agreed.** Rewrites forward paths unchanged, without adding slashes | `frontend/next.config.ts` |
+| F-6 | **Agreed and implemented.** `X-CSRFToken` on POST/PUT/PATCH/DELETE from the `csrftoken` cookie; one bootstrap `GET /_allauth/browser/v1/config` if the cookie is missing | `frontend/src/api/csrf.ts`, `frontend/tests/integration/api-client.test.ts` |
+| F-7 | **Noted** (sign-up closed until Phase 5; staff cannot use codes; no phone change) | — |
+
+**New point for the backend (F-8), observed with a stub backend:** through the Next.js rewrite Django receives `Host` = its own host (`BACKEND_ORIGIN`), the browser's `Origin` unchanged, and `X-Forwarded-Host` = the storefront host. Production settings therefore need `DJANGO_ALLOWED_HOSTS` to include the backend's internal host name and `DJANGO_CSRF_TRUSTED_ORIGINS` to include the storefront origin. Development defaults (`localhost:3000`) already work.

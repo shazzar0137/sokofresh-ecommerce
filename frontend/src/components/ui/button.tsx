@@ -33,8 +33,9 @@ export const buttonVariants = cva(
         ghost: "text-ink hover:bg-tint",
       },
       size: {
-        // 36 px: compact "Add" button on product cards (design 34 px).
-        sm: "h-9 px-4 text-[0.9375rem]",
+        // Compact "Add" button on product cards: 44 px tall on phones (touch
+        // target, analysis §4), 36 px from the md width (design 34 px).
+        sm: "h-11 px-4 text-[0.9375rem] md:h-9",
         // 44 px: header controls.
         md: "h-11 px-5 text-body",
         // 48 px: main calls to action (design "Start shopping").

@@ -7,6 +7,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
+    "predev": "msw init public --save",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -18,12 +19,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "msw:init": "msw init public --save"
-  },
-  "msw": {
-    "workerDirectory": [
-      "public"
-    ]
+    "check:production": "node scripts/check-production-build.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "7.0.9",
@@ -62,5 +58,10 @@
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "vitest": "5.1.2"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

@@ -12,10 +12,16 @@ import { describe, expect, it } from "vitest";
 
 const css = readFileSync(resolve(process.cwd(), "src/app/globals.css"), "utf8");
 
-function token(name: string): string {
-  const match = css.match(new RegExp(`--color-${name}:\\s*(#[0-9a-fA-F]{6})\\b`));
-  if (!match?.[1]) throw new Error(`Token --color-${name} not found as a hex value`);
-  return match[1];
+/** Resolves a colour token to hex, following `var(--color-…)` aliases (QA-9). */
+function token(name: string, depth = 0): string {
+  if (depth > 5) throw new Error(`Alias loop at --color-${name}`);
+  const match = css.match(new RegExp(`--color-${name}:\\s*([^;]+);`));
+  const value = match?.[1]?.trim();
+  if (!value) throw new Error(`Token --color-${name} not found`);
+  const alias = value.match(/^var\(--color-([a-z0-9-]+)\)$/);
+  if (alias?.[1]) return token(alias[1], depth + 1);
+  if (!/^#[0-9a-fA-F]{6}$/.test(value)) throw new Error(`Token --color-${name} is not a hex value: ${value}`);
+  return value;
 }
 
 function luminance(hex: string): number {
@@ -28,6 +34,15 @@ function contrast(a: string, b: string): number {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
   return (hi + 0.05) / (lo + 0.05);
 }
+
+const TILES = ["green", "rose", "lilac", "lime", "mango", "avocado", "lemon", "maize", "rice", "wheat", "sky", "shell", "lake", "peach", "mint"];
+
+describe("product photo tiles", () => {
+  it.each(TILES)("tile-%s: ink text stays readable and the red discount badge stands out (3:1)", (tile) => {
+    expect(contrast(token("ink"), token(`tile-${tile}`))).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(token("accent"), token(`tile-${tile}`))).toBeGreaterThanOrEqual(3);
+  });
+});
 
 describe("contrast helper", () => {
   it("matches known values", () => {
@@ -74,6 +89,15 @@ describe("WCAG AA contrast of token pairs", () => {
     ["ink", "card", LARGE_OR_UI, "2 px input and tab borders"],
     ["ink", "cream", LARGE_OR_UI, "focus outline on light surfaces"],
     ["cream", "ink", LARGE_OR_UI, "focus outline on dark surfaces"],
+    ["focus-on-dark", "brand", LARGE_OR_UI, "focus outline on green panels (A11Y-1)"],
+    ["focus-on-dark", "accent", LARGE_OR_UI, "focus outline on red panels (A11Y-1)"],
+    // Semantic aliases, resolved through var() (QA-9).
+    ["foreground", "background", TEXT, "semantic: text on page"],
+    ["price", "surface", TEXT, "semantic: price on card"],
+    ["price-was", "surface", TEXT, "semantic: old price on card"],
+    ["stock-low", "surface", TEXT, "semantic: low stock on card"],
+    ["border-strong", "surface", LARGE_OR_UI, "semantic: input border on card"],
+    ["focus", "background", LARGE_OR_UI, "semantic: focus outline on page"],
   ])("%s on %s ≥ %s:1 (%s)", (fg, bg, min) => {
     const ratio = contrast(token(fg), token(bg));
     expect(ratio).toBeGreaterThanOrEqual(min);

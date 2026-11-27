@@ -12,6 +12,7 @@ describe("shouldRetry", () => {
     [err(0, "timeout"), true],
     [err(503, "service_unavailable"), true],
     [err(502, "server_error"), true],
+    [err(504, "server_error"), true],
     [err(500, "server_error"), false],
     [err(401, "not_authenticated"), false],
     [err(404, "not_found"), false],
@@ -29,6 +30,10 @@ describe("shouldRetry", () => {
 });
 
 describe("makeQueryClient", () => {
+  it("keeps data fresh for 30 s (prices and stock change during the day)", () => {
+    expect(makeQueryClient().getDefaultOptions().queries?.staleTime).toBe(30_000);
+  });
+
   it("never retries mutations automatically", () => {
     expect(makeQueryClient().getDefaultOptions().mutations?.retry).toBe(false);
   });

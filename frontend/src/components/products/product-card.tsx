@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -37,6 +37,8 @@ export type TileTone = keyof typeof TILE_TONES;
 
 export interface ProductCardProps {
   name: string;
+  /** Language of `name` when it is not English, e.g. "sw" for "Sukuma wiki" (NFR-09). */
+  nameLang?: "sw" | "en";
   localName?: string;
   localNameLang?: "sw" | "en";
   origin?: string;
@@ -56,6 +58,7 @@ export interface ProductCardProps {
 
 export function ProductCard({
   name,
+  nameLang,
   localName,
   localNameLang,
   origin,
@@ -71,8 +74,13 @@ export function ProductCard({
   className,
 }: ProductCardProps) {
   const H = headingLevel === 2 ? "h2" : "h3";
+  const headingId = useId();
   return (
+    // Named by its heading, so a screen-reader list of articles reads product names.
+    // The add-to-basket control (Phase 5) must also carry the product name in its
+    // accessible name ("Add Tomatoes 1kg to basket"), not just "Add" (review A11Y-3).
     <article
+      aria-labelledby={headingId}
       className={cn(
         "flex h-full flex-col overflow-hidden rounded-card border border-line bg-card shadow-card",
         className,
@@ -83,7 +91,9 @@ export function ProductCard({
         {media}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3 md:p-4">
-        <H className="font-display text-product font-extrabold text-ink">{name}</H>
+        <H id={headingId} lang={nameLang} className="font-display text-product font-extrabold text-ink">
+          {name}
+        </H>
         <OriginLine localName={localName} localNameLang={localNameLang} origin={origin} />
         <StockNote remaining={stockRemaining} isLow={stockIsLow} />
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">

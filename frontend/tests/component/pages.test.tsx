@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import BasketPage from "@/app/basket/page";
 import RouteError from "@/app/error";
-import NotFound from "@/app/not-found";
+import NotFound, { metadata as notFoundMetadata } from "@/app/not-found";
 import HomePage from "@/app/page";
 import { readSearchQuery, SearchSummary } from "@/features/search/search-summary";
 
@@ -32,6 +32,10 @@ describe("Basket and not-found pages", () => {
     render(<NotFound />);
     expect(screen.getByRole("heading", { level: 1, name: "Page not found" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Go to the home page" })).toHaveAttribute("href", "/");
+  });
+
+  it("404 page has its own browser title (WCAG 2.4.2)", () => {
+    expect(notFoundMetadata.title).toBe("Page not found");
   });
 });
 

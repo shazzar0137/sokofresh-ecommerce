@@ -96,12 +96,25 @@ test.describe("security", () => {
     expect(headers["x-powered-by"]).toBeUndefined();
   });
 
+  test("the served CSP is exactly the reviewed policy", async ({ request }) => {
+    const csp = (await request.get("/shop")).headers()["content-security-policy"];
+    expect(csp).toBe(
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; " +
+        "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src 'none'",
+    );
+  });
+
+  test("the MSW worker file is not served by a production build", async ({ request }) => {
+    expect((await request.get("/mockServiceWorker.js")).status()).toBe(404);
+  });
+
   test("no third-party requests are made by the shell (no Google Maps on home/shop)", async ({ page, baseURL }) => {
     const origins = new Set<string>();
     page.on("request", (req) => origins.add(new URL(req.url()).origin));
     for (const path of ["/", "/shop", "/basket"]) {
-      await page.goto(path);
-      await page.waitForLoadState("networkidle");
+      await page.goto(path, { waitUntil: "load" });
+      await page.evaluate(() => document.fonts.ready);
     }
     expect([...origins].filter((o) => o !== new URL(baseURL!).origin && !o.startsWith("data:"))).toEqual([]);
   });
@@ -109,8 +122,9 @@ test.describe("security", () => {
   test("the page works with the strict CSP (no CSP violations reported)", async ({ page }) => {
     const violations: string[] = [];
     page.on("console", (msg) => /Content Security Policy/i.test(msg.text()) && violations.push(msg.text()));
-    await page.goto("/design-system");
-    await page.waitForLoadState("networkidle");
+    // Includes inline-handler attempts: script-src-attr 'none' must not break React.
+    await page.goto("/design-system", { waitUntil: "load" });
+    await page.getByRole("button", { name: "Start shopping" }).click();
     expect(violations).toEqual([]);
   });
 });

@@ -43,19 +43,28 @@ function browserCookies(): string {
 
 let inflight: Promise<string | null> | null = null;
 
+export const CSRF_BOOTSTRAP_TIMEOUT_MS = 10_000;
+
 /**
  * Returns the CSRF token, asking Django to set the cookie first if needed.
- * Concurrent callers share one bootstrap request.
+ * Concurrent callers share one bootstrap request. The bootstrap has its own
+ * timeout, so a hung request on poor mobile data cannot freeze every later
+ * write; on failure it resolves to null and the next write tries again.
+ * (Without a token Django answers 403 csrf_failed, shown as a friendly error.)
  */
-export async function ensureCsrfToken(fetchImpl: typeof fetch = fetch): Promise<string | null> {
+export async function ensureCsrfToken(
+  fetchImpl: typeof fetch = fetch,
+  timeoutMs: number = CSRF_BOOTSTRAP_TIMEOUT_MS,
+): Promise<string | null> {
   const existing = readCookie(CSRF_COOKIE_NAME, browserCookies());
   if (existing) return existing;
   if (typeof document === "undefined") return null; // Server side: no browser cookies.
 
-  inflight ??= fetchImpl(CSRF_BOOTSTRAP_PATH, {
+  inflight ??= fetchImpl(new URL(CSRF_BOOTSTRAP_PATH, document.baseURI).toString(), {
     method: "GET",
     credentials: "same-origin",
     headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(timeoutMs),
   })
     .then(() => readCookie(CSRF_COOKIE_NAME, browserCookies()))
     .catch(() => null)

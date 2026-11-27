@@ -3,10 +3,9 @@ import { PHASE_PRODUCTION_BUILD, PHASE_PRODUCTION_SERVER } from "next/constants"
 
 import { resolveBackendOrigin } from "./src/config/backend-origin";
 import { buildSecurityHeaders } from "./src/config/security-headers";
+import { resolveSiteUrl } from "./src/config/site-url";
 
 const isDev = process.env.NODE_ENV === "development";
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-const isHttps = siteUrl.startsWith("https://");
 
 export default function config(phase: string): NextConfig {
   // Fails `next build` / `next start` early if BACKEND_ORIGIN is missing or malformed:
@@ -16,10 +15,20 @@ export default function config(phase: string): NextConfig {
   const isTypegen = process.argv.includes("typegen");
   const required = phase === PHASE_PRODUCTION_SERVER || (phase === PHASE_PRODUCTION_BUILD && !isTypegen);
   const backendOrigin = resolveBackendOrigin(process.env, { required });
-  return buildNextConfig(backendOrigin);
+  const isHttps = resolveSiteUrl(process.env, { required }).protocol === "https:";
+  return buildNextConfig({ backendOrigin, isDev, isHttps });
 }
 
-function buildNextConfig(backendOrigin: string): NextConfig {
+/** Exported for tests (tests/unit/next-config.test.ts). */
+export function buildNextConfig({
+  backendOrigin,
+  isDev,
+  isHttps,
+}: {
+  backendOrigin: string;
+  isDev: boolean;
+  isHttps: boolean;
+}): NextConfig {
   return {
   // Next.js 16 defaults from create-next-app.
   cacheComponents: true,
@@ -59,10 +68,16 @@ function buildNextConfig(backendOrigin: string): NextConfig {
   // address and Next.js forwards to Django, so session and CSRF cookies stay
   // first-party and no CORS is needed. No trailing slashes (contract F-5).
   async rewrites() {
-    return [
-      { source: "/api/v1/:path*", destination: `${backendOrigin}/api/v1/:path*` },
-      { source: "/_allauth/:path*", destination: `${backendOrigin}/_allauth/:path*` },
-    ];
+    return {
+      // Outside `next dev`, never serve the MSW worker even if the file exists
+      // in public/ (review SEC-4): it is rewritten to a path that does not exist.
+      beforeFiles: isDev ? [] : [{ source: "/mockServiceWorker.js", destination: "/__no-mock-worker" }],
+      afterFiles: [
+        { source: "/api/v1/:path*", destination: `${backendOrigin}/api/v1/:path*` },
+        { source: "/_allauth/:path*", destination: `${backendOrigin}/_allauth/:path*` },
+      ],
+      fallback: [],
+    };
   },
   };
 }

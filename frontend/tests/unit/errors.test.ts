@@ -63,20 +63,40 @@ describe("apiErrorFromResponse", () => {
   it.each([
     [502, "server_error", true],
     [503, "service_unavailable", true],
+    [504, "server_error", true],
     [500, "server_error", false],
     [429, "rate_limited", false],
-    [404, "invalid_response", false],
-  ])("falls back safely for a non-problem %i body", (status, code, retryable) => {
+    [401, "not_authenticated", false],
+    [403, "permission_denied", false],
+    [404, "not_found", false],
+    [422, "validation_error", false],
+    [400, "bad_request", false],
+    [409, "bad_request", false],
+  ])("falls back by status for a non-problem %i body (e.g. allauth or a proxy page)", (status, code, retryable) => {
     const error = apiErrorFromResponse(new Response("<html>Bad gateway</html>", { status }), "<html>Bad gateway</html>");
     expect(error.code).toBe(code);
     expect(error.isRetryable).toBe(retryable);
     expect(error.detail).not.toContain("<html>");
   });
 
-  it("ignores an invalid Retry-After value", () => {
-    const response = new Response(null, { status: 429, headers: { "Retry-After": "soon" } });
-    expect(apiErrorFromResponse(response, null).retryAfterSeconds).toBeUndefined();
+  it.each([
+    ["soon", undefined],
+    ["-5", undefined],
+    ["1.5", 2],
+    ["0", 0],
+  ])("reads Retry-After %j as %s seconds (rounded up, never negative)", (header, expected) => {
+    const response = new Response(null, { status: 429, headers: { "Retry-After": header } });
+    expect(apiErrorFromResponse(response, null).retryAfterSeconds).toBe(expected);
   });
+
+  it.each(["timeout", "network_error", "invalid_response"])(
+    "does not accept the client-only code %j from a server body (it would make a 4xx retryable)",
+    (code) => {
+      const error = apiErrorFromResponse(new Response(null, { status: 400 }), { ...problem(), status: 400, code, errors: [] });
+      expect(error.code).toBe("error");
+      expect(error.isRetryable).toBe(false);
+    },
+  );
 });
 
 describe("userMessageFor", () => {
@@ -91,8 +111,8 @@ describe("userMessageFor", () => {
   });
 
   it("handles non-ApiError values", () => {
-    expect(userMessageFor(new Error("secret internal detail"))).toBe("Something went wrong. Please try again.");
-    expect(userMessageFor(undefined)).toBe("Something went wrong. Please try again.");
+    expect(userMessageFor(new Error("secret internal detail"))).toBe("Please try again in a moment.");
+    expect(userMessageFor(undefined)).toBe("Please try again in a moment.");
   });
 
   it("has wording for network problems", () => {

@@ -51,6 +51,13 @@ describe("Button", () => {
     expect(screen.getByRole("button").className.split(" ")).toContain("text-brand-foreground");
   });
 
+  it("gives the compact button a 44 px touch target on phones and the design's 36 px from md", () => {
+    render(<Button size="sm">Add</Button>);
+    const cls = screen.getByRole("button").className.split(" ");
+    expect(cls).toContain("h-11");
+    expect(cls).toContain("md:h-9");
+  });
+
   it("applies variants and lets callers override classes", () => {
     render(
       <Button variant="accent" shape="pill" className="px-8">
