@@ -5,16 +5,28 @@ Why (re-review finding RSEC-1): a customer who signed in with an SMS code and is
 later made staff would otherwise keep a code-only session that opens the admin;
 and allauth's own password-login API would bypass any protection added to the
 admin login page later (MFA in Phase 5).
+
+The admin login page also limits password attempts (Phase 3 integration review
+BSEC-1): per IP address and per phone number, using allauth's rate-limit
+counters in the shared database cache.
 """
 
+from allauth.core import ratelimit
 from django.contrib import admin
 from django.contrib.admin.apps import AdminConfig
 from django.contrib.auth.signals import user_logged_in
 from django.dispatch import receiver
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.urls import NoReverseMatch, reverse
 
+from apps.core.phone import InvalidPhoneNumber, normalize_kenyan_mobile
+
 ADMIN_LOGIN_SESSION_KEY = "sokofresh_admin_password_login"
+# Rates live in ACCOUNT_RATE_LIMITS (config/settings/base.py) under these names.
+# Two actions, so a successful login can clear the account's counter without
+# also resetting its IP address's counter (re-review RR-11).
+ADMIN_LOGIN_ACCOUNT_ACTION = "admin_login_account"
+ADMIN_LOGIN_IP_ACTION = "admin_login_ip"
 
 
 class SokoFreshAdminSite(admin.AdminSite):
@@ -25,6 +37,41 @@ class SokoFreshAdminSite(admin.AdminSite):
         return super().has_permission(request) and bool(
             request.session.get(ADMIN_LOGIN_SESSION_KEY)
         )
+
+    def login(self, request: HttpRequest, extra_context=None) -> HttpResponse:
+        """Admin password login, refused with 429 after too many attempts.
+
+        - The key is the phone number in the same normalised form the login
+          uses (UserManager.get_by_natural_key), so typing one number in other
+          spellings (+254…, 254…, spaces) shares one counter (re-review RR-1).
+        - The attempt is recorded *before* the password is tested, under
+          allauth's cache lock, so a burst of parallel guesses cannot all slip
+          through a check-then-record gap (RR-2).
+        - The account counter is checked first, so attempts refused for one
+          account do not also use up a shared address's allowance (RR-12).
+        - A successful sign-in clears only that account's counter, so staff
+          are not held back by their own earlier typos; the IP counter is
+          never cleared (RR-11).
+        """
+        if request.method != "POST":
+            return super().login(request, extra_context)
+        account = {"action": ADMIN_LOGIN_ACCOUNT_ACTION, "key": _login_key(request)}
+        if not ratelimit.consume(request, **account):
+            return ratelimit.respond_429(request)
+        if not ratelimit.consume(request, action=ADMIN_LOGIN_IP_ACTION):
+            return ratelimit.respond_429(request)
+        response = super().login(request, extra_context)
+        if response.status_code == 302 and request.user.is_authenticated:
+            ratelimit.clear(request, **account)
+        return response
+
+
+def _login_key(request: HttpRequest) -> str:
+    raw = request.POST.get("username", "")
+    try:
+        return normalize_kenyan_mobile(raw)
+    except InvalidPhoneNumber:
+        return raw.strip().lower()
 
 
 class SokoFreshAdminConfig(AdminConfig):

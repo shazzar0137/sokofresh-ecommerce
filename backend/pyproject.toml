@@ -52,3 +52,17 @@ select = ["E", "F", "I", "B", "UP", "DJ", "S", "T20", "BLE"]
 # Tests use assert and fixed fake secrets.
 "**/tests/**" = ["S101", "S105", "S106"]
 "tests/**" = ["S101", "S105", "S106", "S603"]
+
+# Coverage of application code (integration review QA-COV): measured in CI
+# with a minimum, excluding migrations, tests and server entry points.
+[tool.coverage.run]
+source = ["apps", "config"]
+branch = true
+# Also measure the production settings, which tests load in subprocesses (ARC-8, QA-5).
+patch = ["subprocess"]
+omit = ["*/migrations/*", "*/tests/*", "config/wsgi.py", "config/asgi.py", "config/settings/dev.py"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = false
+skip_covered = true

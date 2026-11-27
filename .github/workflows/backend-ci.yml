@@ -1,5 +1,5 @@
 # Backend continuous integration (Phase 3).
-# Runs on every push and pull request that touches the backend, the shared
+# Runs on every pull request, and on pushes that touch the backend, the shared
 # contract or this workflow. Nothing here deploys anywhere.
 name: Backend CI
 
@@ -9,13 +9,11 @@ on:
       - "backend/**"
       - "shared/contracts/**"
       - "shared/test-fixtures/**"
+      - "frontend/src/api/csrf.ts" # pinned by tests/contract/test_allauth_contract.py
       - ".github/workflows/backend-ci.yml"
+  # No path filter on pull requests: a workflow skipped by a path filter never
+  # reports, so its checks could not be "required" on main (review QA-2).
   pull_request:
-    paths:
-      - "backend/**"
-      - "shared/contracts/**"
-      - "shared/test-fixtures/**"
-      - ".github/workflows/backend-ci.yml"
   workflow_dispatch:
 
 permissions:
@@ -23,7 +21,8 @@ permissions:
 
 concurrency:
   group: backend-ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a run on main, so every main commit keeps a CI result (QA-8).
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 defaults:
   run:
@@ -86,8 +85,15 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.test
       # Includes the OpenAPI drift check (tests/contract) and the production
       # `check --deploy` run (tests/integration/test_settings.py).
-      - name: Run tests
-        run: uv run pytest
+      - name: Run tests (with coverage)
+        run: uv run coverage run -m pytest
+      # Minimum coverage of application code; settings in pyproject.toml
+      # [tool.coverage] (Phase 3 integration review).
+      # Production settings run in subprocesses; their data files are combined here.
+      - name: Coverage report and minimum
+        run: |
+          uv run coverage combine
+          uv run coverage report
 
   dependency-audit:
     name: Dependency audit (pip-audit)

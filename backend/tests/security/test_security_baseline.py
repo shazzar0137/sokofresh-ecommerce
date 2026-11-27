@@ -57,6 +57,8 @@ def test_api_docs_are_not_served_outside_development(client):
         "auth/email/verify/resend",
         "auth/password/request",
         "auth/password/reset",
+        "auth/login",  # BSEC-2: staff passwords only on the throttled admin login
+        "auth/reauthenticate",
     ],
 )
 @pytest.mark.parametrize("method", ["get", "post"])

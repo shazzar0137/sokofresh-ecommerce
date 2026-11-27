@@ -31,6 +31,8 @@ PROD_ENV = {
     "DJANGO_ADMIN_URL": "staff-test-path/",
     "DATABASE_URL": "postgres://u:p@localhost:5432/unused",
     "DJANGO_TRUSTED_PROXY_COUNT": "1",
+    "DJANGO_CSRF_TRUSTED_ORIGINS": "https://www.sokofresh.example",
+    "DJANGO_ACCEPT_ADMIN_WITHOUT_MFA": "true",
 }
 
 
@@ -109,6 +111,59 @@ def test_production_settings_pass_the_deploy_checklist():
         ),
         ({"DJANGO_SECRET_KEY": "Django-Insecure-" + "abcdef123" * 6}, "DJANGO_SECRET_KEY must be"),
         ({"DJANGO_TRUSTED_PROXY_COUNT": "-1"}, "DJANGO_TRUSTED_PROXY_COUNT must be 0 or more"),
+        ({"DJANGO_CSRF_TRUSTED_ORIGINS": ""}, "DJANGO_CSRF_TRUSTED_ORIGINS must list"),
+        (
+            {"DJANGO_CSRF_TRUSTED_ORIGINS": "http://www.sokofresh.example"},
+            "DJANGO_CSRF_TRUSTED_ORIGINS must list",
+        ),
+        (
+            {"DJANGO_CSRF_TRUSTED_ORIGINS": "https://www.sokofresh.example/"},
+            "DJANGO_CSRF_TRUSTED_ORIGINS must list",
+        ),
+        (
+            {"DJANGO_CSRF_TRUSTED_ORIGINS": "https://*.sokofresh.example"},
+            "DJANGO_CSRF_TRUSTED_ORIGINS must list",
+        ),
+        (
+            {"DJANGO_CSRF_TRUSTED_ORIGINS": "https://www.sokofresh.example,http://evil.example"},
+            "DJANGO_CSRF_TRUSTED_ORIGINS must list",
+        ),
+        # BSEC-6 / ARC-9: values the first regex accepted.
+        *[
+            ({"DJANGO_CSRF_TRUSTED_ORIGINS": bad}, "DJANGO_CSRF_TRUSTED_ORIGINS must list")
+            for bad in (
+                "https://.",
+                "https://-",
+                "https://localhost",
+                "https://www.sokofresh.example:99999",
+                "https://www.sokofresh.example:443",
+                "https://www.sokofresh.example:0",
+                "https://WWW.sokofresh.example",
+                "https://user@www.sokofresh.example",
+                "https://www.sokofresh.example?x=1",
+                "https://www.sokofresh.example#x",
+                "https://-www.sokofresh.example",
+                "https://www..sokofresh.example",
+                "https://www.sokofresh.example:",  # RR-3: empty port
+                "https://www.sokofresh.example:08443",  # RR-3: padded port
+                "https://10.0.0.1",  # IP address, not the storefront name
+                "https://1.1",
+            )
+        ],
+        # BSEC-4: no wildcard hosts.
+        ({"DJANGO_ALLOWED_HOSTS": "*"}, "DJANGO_ALLOWED_HOSTS must list exact host names"),
+        (
+            {"DJANGO_ALLOWED_HOSTS": "api.sokofresh.example,.sokofresh.example"},
+            "DJANGO_ALLOWED_HOSTS must list exact host names",
+        ),
+        ({"DJANGO_ALLOWED_HOSTS": " , "}, "DJANGO_ALLOWED_HOSTS must list"),
+        (
+            {"DJANGO_ALLOWED_HOSTS": "*.sokofresh.example"},
+            "DJANGO_ALLOWED_HOSTS must list exact host names",
+        ),
+        # BSEC-1: no password-only admin unless the owner accepts it.
+        ({"DJANGO_ACCEPT_ADMIN_WITHOUT_MFA": "false"}, "DJANGO_ACCEPT_ADMIN_WITHOUT_MFA"),
+        ({"DJANGO_ACCEPT_ADMIN_WITHOUT_MFA": ""}, "DJANGO_ACCEPT_ADMIN_WITHOUT_MFA"),
     ],
 )
 def test_production_refuses_unsafe_configuration(override, message):
@@ -122,6 +177,33 @@ def test_production_requires_the_trusted_proxy_count():
     result = run_manage("check", env_overrides=env)
     assert result.returncode != 0
     assert "DJANGO_TRUSTED_PROXY_COUNT" in result.stderr
+
+
+def test_production_requires_the_storefront_csrf_origin():
+    env = {k: v for k, v in PROD_ENV.items() if k != "DJANGO_CSRF_TRUSTED_ORIGINS"}
+    result = run_manage("check", env_overrides=env)
+    assert result.returncode != 0
+    assert "DJANGO_CSRF_TRUSTED_ORIGINS" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "origins",
+    [
+        "https://www.sokofresh.example:8443",
+        " https://www.sokofresh.example , https://sokofresh.example ",
+        "https://shop-1.sokofresh.co.ke",
+    ],
+)
+def test_production_accepts_valid_storefront_origins(origins):
+    result = run_manage("check", env_overrides={**PROD_ENV, "DJANGO_CSRF_TRUSTED_ORIGINS": origins})
+    assert result.returncode == 0, result.stderr
+
+
+def test_production_requires_the_admin_mfa_risk_acceptance():
+    env = {k: v for k, v in PROD_ENV.items() if k != "DJANGO_ACCEPT_ADMIN_WITHOUT_MFA"}
+    result = run_manage("check", env_overrides=env)
+    assert result.returncode != 0
+    assert "MFA, D-031" in result.stderr
 
 
 def test_production_refuses_to_start_without_a_secret_key():
