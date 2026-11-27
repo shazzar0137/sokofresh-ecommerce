@@ -11,7 +11,13 @@
     {"input": "0100123456", "e164": "+254100123456", "note": "010 prefix"},
     {"input": "0757-000-001", "e164": "+254757000001", "note": "dashes"},
     {"input": "0180123456", "e164": "+254180123456", "note": "018 range (mobile per libphonenumber)"},
-    {"input": "0146123456", "e164": "+254146123456", "note": "014 range, last mobile block"}
+    {"input": "0146123456", "e164": "+254146123456", "note": "014 range, last mobile block"},
+    {"input": "0119123456", "e164": "+254119123456", "note": "011 range, top of 11x"},
+    {"input": "0120123456", "e164": "+254120123456", "note": "0120 block"},
+    {"input": "0124123456", "e164": "+254124123456", "note": "0124 block"},
+    {"input": "0130123456", "e164": "+254130123456", "note": "0130 block"},
+    {"input": "0135123456", "e164": "+254135123456", "note": "0135 block"},
+    {"input": "0189123456", "e164": "+254189123456", "note": "018 range, top"}
   ],
   "invalid": [
     {"input": "", "note": "empty"},
@@ -24,6 +30,11 @@
     {"input": "0150123456", "note": "015 range: not assigned to mobile (API-4)"},
     {"input": "0190123456", "note": "019 range: not assigned to mobile (API-4)"},
     {"input": "0109123456", "note": "0109 block: not mobile (API-4)"},
-    {"input": "0122123456", "note": "0122 block: not mobile (API-4)"}
+    {"input": "0122123456", "note": "0122 block: not mobile (API-4)"},
+    {"input": "0147123456", "note": "0147 block: not mobile (RR-5)"},
+    {"input": "0131123456", "note": "0131 block: not mobile (RR-5)"},
+    {"input": "0134123456", "note": "0134 block: not mobile (RR-5)"},
+    {"input": "0123123456", "note": "0123 block: not mobile (RR-5)"},
+    {"input": "0125123456", "note": "0125 block: not mobile (RR-5)"}
   ]
 }

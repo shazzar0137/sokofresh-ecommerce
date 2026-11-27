@@ -1,6 +1,6 @@
 # Technology Decisions Pending
 
-Decided so far (all approved 2026-11-26, ADR-0001 to ADR-0013): **Next.js 16 + React + TypeScript; Django 6 + DRF; PostgreSQL (Neon); REST + generated OpenAPI; django-allauth phone sign-in; Django admin; Pochi la Biashara with staff verification at launch (Pesapal future); hosting on commercial plans, chosen in Phase 8; Google Maps Platform for addresses and delivery distance.**
+Decided so far (approved 2026-11-26, ADR-0001 to ADR-0013; Phase 3 foundation choices in ADR-0014, owner to confirm): **Next.js 16 + React + TypeScript; Django 6 + DRF; PostgreSQL (Neon); REST + generated OpenAPI; django-allauth phone sign-in; Django admin; Pochi la Biashara with staff verification at launch (Pesapal future); hosting on commercial plans, chosen in Phase 8; Google Maps Platform for addresses and delivery distance.**
 Every item below has now been decided (see the Status column); this file is kept as the record of what was assessed. Phase 2 research (2026-11-26) produced a proposed answer for each item, recorded as ADRs in `docs/decisions/adr/`, which the owner then accepted. New technology choices still need research, owner approval and an ADR. Evidence: `docs/research/TECHNOLOGY_RESEARCH_2026-11.md`.
 
 Each option should be assessed for: benefits, limitations, learning curve, security, performance, maintenance, hosting, free-tier limits and costs, integration with M-Pesa and other services, and vendor lock-in.

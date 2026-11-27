@@ -40,15 +40,25 @@ code=$(status "${EDGE[@]}" "$STOREFRONT_URL/api/v1/health")
 check "GET /api/v1/health through Next.js" 200 "$code"
 check "health reports the database" '"ok"' "$(grep -o '"database": *"[a-z]*"' "$WORK/body" | grep -o '"[a-z]*"$')"
 
+# 0. Proof STOREFRONT_URL is the Next.js server, not Django itself (re-review
+#    RR-4): the home page exists only in Next.js, and Permissions-Policy is set
+#    only by next.config.ts. (Next.js does not add its headers to proxied
+#    responses, so the rewritten API answers above cannot show this.)
+code=$(status "${EDGE[@]}" "$STOREFRONT_URL/")
+check "GET / is the storefront home page" 200 "$code"
+check "storefront sets Permissions-Policy (Next.js only)" yes \
+  "$(grep -qi '^permissions-policy:' "$WORK/headers" && echo yes || echo no)"
+
 # 2. CSRF bootstrap exactly as the frontend does it (CSRF_BOOTSTRAP_PATH in
 #    frontend/src/api/csrf.ts): allauth's config endpoint sets the csrftoken cookie.
 code=$(status -c "$JAR" "${EDGE[@]}" "$ALLAUTH/config")
 check "GET config (CSRF bootstrap)" 200 "$code"
 cookie_line=$(grep -i '^set-cookie: csrftoken=' "$WORK/headers" || true)
 check "csrftoken cookie is set" yes "$([[ -n $cookie_line ]] && echo yes || echo no)"
-check "csrftoken cookie is first-party (no Domain)" no \
-  "$(grep -qi 'domain=' <<<"$cookie_line" && echo yes || echo no)"
-check "csrftoken cookie is Secure" yes "$(grep -qi 'secure' <<<"$cookie_line" && echo yes || echo no)"
+# The cookie checks below only mean something if the cookie exists (RR-4).
+check "csrftoken cookie is first-party (no Domain)" yes \
+  "$([[ -n $cookie_line ]] && ! grep -qi 'domain=' <<<"$cookie_line" && echo yes || echo no)"
+check "csrftoken cookie is Secure" yes "$(grep -qi '; *secure' <<<"$cookie_line" && echo yes || echo no)"
 token=$(awk '$6 == "csrftoken" {print $7}' "$JAR")
 code=$(status -b "$JAR" "${EDGE[@]}" "$ALLAUTH/auth/session")
 check "GET auth/session (signed out)" 401 "$code"
@@ -78,6 +88,9 @@ code=$(status -b "$JAR" "${EDGE[@]}" "${BROWSER[@]}" -H "X-CSRFToken: $token" \
   -H "Content-Type: application/json" --data '{"phone":"+254712345678","password":"x"}' \
   "$ALLAUTH/auth/login")
 check "POST auth/login is not available" 404 "$code"
+# Django's own 404 (problem JSON), not Next.js's HTML 404 for a missing rewrite (RR-4).
+check "auth/login 404 comes from Django" yes \
+  "$(grep -qi '^content-type: application/problem+json' "$WORK/headers" && echo yes || echo no)"
 
 rm -rf "$WORK"
 if ((FAILURES > 0)); then

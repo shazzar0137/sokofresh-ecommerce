@@ -144,6 +144,10 @@ def test_production_settings_pass_the_deploy_checklist():
                 "https://www.sokofresh.example#x",
                 "https://-www.sokofresh.example",
                 "https://www..sokofresh.example",
+                "https://www.sokofresh.example:",  # RR-3: empty port
+                "https://www.sokofresh.example:08443",  # RR-3: padded port
+                "https://10.0.0.1",  # IP address, not the storefront name
+                "https://1.1",
             )
         ],
         # BSEC-4: no wildcard hosts.
@@ -153,6 +157,10 @@ def test_production_settings_pass_the_deploy_checklist():
             "DJANGO_ALLOWED_HOSTS must list exact host names",
         ),
         ({"DJANGO_ALLOWED_HOSTS": " , "}, "DJANGO_ALLOWED_HOSTS must list"),
+        (
+            {"DJANGO_ALLOWED_HOSTS": "*.sokofresh.example"},
+            "DJANGO_ALLOWED_HOSTS must list exact host names",
+        ),
         # BSEC-1: no password-only admin unless the owner accepts it.
         ({"DJANGO_ACCEPT_ADMIN_WITHOUT_MFA": "false"}, "DJANGO_ACCEPT_ADMIN_WITHOUT_MFA"),
         ({"DJANGO_ACCEPT_ADMIN_WITHOUT_MFA": ""}, "DJANGO_ACCEPT_ADMIN_WITHOUT_MFA"),

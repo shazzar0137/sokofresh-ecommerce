@@ -81,8 +81,10 @@ jobs:
           echo "::add-mask::$DJANGO_SECRET_KEY"
           export DJANGO_SECRET_KEY
           (cd backend && uv run python manage.py migrate --noinput)
-          (cd backend && nohup uv run python manage.py runserver 127.0.0.1:8000 --noreload > "$RUNNER_TEMP/django.log" 2>&1 &)
-          (cd frontend && nohup npx next start -p 3999 -H 127.0.0.1 > "$RUNNER_TEMP/next.log" 2>&1 &)
+          # Each server's own output goes to its log, so nothing keeps this step's
+          # output open (re-review RR-6).
+          (cd backend && exec nohup uv run python manage.py runserver 127.0.0.1:8000 --noreload) > "$RUNNER_TEMP/django.log" 2>&1 &
+          (cd frontend && exec nohup npx next start -p 3999 -H 127.0.0.1) > "$RUNNER_TEMP/next.log" 2>&1 &
           for _ in $(seq 1 60); do
             if curl -fsS -H "X-Forwarded-Proto: https" http://127.0.0.1:3999/api/v1/health > /dev/null; then
               exit 0

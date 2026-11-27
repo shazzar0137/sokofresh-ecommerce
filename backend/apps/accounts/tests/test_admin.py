@@ -138,6 +138,66 @@ def test_admin_login_still_works_after_a_few_typos(client):
     assert client.session["sokofresh_admin_password_login"] is True
 
 
+@pytest.mark.parametrize(
+    "spelling",
+    ["+254712345678", "254712345678", "0712 345 678", "0712-345-678", " 0712345678 "],
+)
+def test_other_spellings_of_a_blocked_number_are_blocked_too(client, spelling):
+    """RR-1: the limit is per account, not per typed text (the login normalises it)."""
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    for _ in range(5):
+        _admin_login(client, phone="0712345678", REMOTE_ADDR="203.0.113.1")
+    response = _admin_login(
+        client, phone=spelling, password="a-long-staff-password-1", REMOTE_ADDR="203.0.113.2"
+    )
+    assert response.status_code == 429
+
+
+def test_rotating_spellings_and_addresses_cannot_add_guesses(client):
+    """RR-1: 5 guesses per account, however the number is written, from any IP."""
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    spellings = ["0712345678", "+254712345678", "254712345678", "0712 345 678", "0712.345.678"]
+    statuses = [
+        _admin_login(client, phone=spelling, REMOTE_ADDR=f"203.0.113.{i}").status_code
+        for i, spelling in enumerate(spellings * 2)
+    ]
+    assert statuses == [200] * 5 + [429] * 5
+
+
+def test_the_attempt_is_recorded_before_the_password_is_checked(client, monkeypatch):
+    """RR-2: recording first (under allauth's cache lock) closes the burst race in
+    which parallel guesses all passed a check made before any was recorded."""
+    from allauth.core import ratelimit
+    from django.contrib.admin import AdminSite
+
+    from apps.core.admin_site import ADMIN_LOGIN_FAILED_ACTION
+
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    for _ in range(4):
+        _admin_login(client)
+    seen = {}
+    original = AdminSite.login
+
+    def spy(self, request, extra_context=None):
+        seen["room_left"] = ratelimit.consume(
+            request, action=ADMIN_LOGIN_FAILED_ACTION, key="+254712345678", dry_run=True
+        )
+        return original(self, request, extra_context)
+
+    monkeypatch.setattr(AdminSite, "login", spy)
+    _admin_login(client)
+    assert seen == {"room_left": False}  # the 5th attempt was counted before the check
+
+
+def test_a_successful_login_clears_earlier_typos(client):
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    for _ in range(4):
+        _admin_login(client)
+    assert _admin_login(client, password="a-long-staff-password-1").status_code == 302
+    client.logout()
+    assert [_admin_login(client).status_code for _ in range(6)] == [200] * 5 + [429]
+
+
 def test_successful_admin_logins_are_not_counted(client):
     User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
     for _ in range(8):

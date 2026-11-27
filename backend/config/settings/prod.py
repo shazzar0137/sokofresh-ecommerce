@@ -21,7 +21,7 @@ if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS must list the site's host names.")
 # "*" accepts any Host header and ".example.com" any sub-domain; production
 # lists exact host names only (finding BSEC-4).
-if any(host == "*" or host.startswith(".") for host in ALLOWED_HOSTS):
+if any("*" in host or host.startswith(".") for host in ALLOWED_HOSTS):
     raise ImproperlyConfigured(
         "DJANGO_ALLOWED_HOSTS must list exact host names (no '*', no leading '.')."
     )
@@ -42,11 +42,15 @@ def _is_exact_https_origin(value: str) -> bool:
         return False
     host = parts.hostname or ""
     labels = host.split(".")
+    # Rebuilt from the parsed parts: refuses a path, query, fragment, user,
+    # trailing "/", an empty port ("host:") and a padded one (":08443"), none of
+    # which a browser's Origin header can ever match (RR-3).
+    canonical = f"https://{host}" + (f":{port}" if port is not None else "")
     return (
         parts.scheme == "https"
-        and value == f"https://{parts.netloc}"  # no path, query, fragment or trailing "/"
-        and "@" not in parts.netloc
+        and value == canonical
         and len(labels) >= 2
+        and not labels[-1].isdigit()  # no IPv4 address (a real TLD is never all digits)
         and all(re.fullmatch(r"[a-z0-9]([a-z0-9-]*[a-z0-9])?", label) for label in labels)
         and port not in (0, 443)
     )
