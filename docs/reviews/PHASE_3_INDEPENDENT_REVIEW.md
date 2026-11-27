@@ -1,6 +1,8 @@
 # Phase 3 Independent Integration Review
 
-_Reviewer: Project Architect (this session) with six independent review agents and one independent re-reviewer · Date: 2026-11-27 · Reviewed commit: `b2ed918` (= content of `main` after PR #1, merge commit `0e6c91d`) · Corrections: branch `fix/## 0. Approval status
+_Reviewer: Project Architect (this session) with six independent review agents and one independent re-reviewer · Date: 2026-11-27 · Reviewed commit: `b2ed918` (= content of `main` after PR #1, merge commit `0e6c91d`) · Corrections: branch `fix/phase-3-integration-review`, PR #2 (`844783d`, `be9f74b`, `dffd124`, `bcc4861`, `5771c79` and this fix-up)_
+
+## 0. Approval status
 
 **CORRECTIONS COMPLETE: RECOMMENDED FOR THE OWNER'S APPROVAL. Not merged; Phase 4 not started.**
 
@@ -27,8 +29,6 @@ Context: Phase 3 was merged into `main` by the owner's account through PR #1 (20
 | R | Re-review of all corrections | fresh `general-purpose` agent (did not write the fixes) | Three rounds: `be9f74b` (RR-1 to RR-10), `dffd124` (RR-11 to RR-13), `bcc4861` (§8) |
 
 Each reviewer worked on its own copy of the repository and its own database, and reported file paths, evidence and commands. Reports were checked against the code before acting; the Architect reproduced or confirmed every High finding himself (§5).
-
-bi time), and their findings, plus a re-review of the corrections, will be added to this report as §8.
 
 ## 2. Scope and method
 
