@@ -1,27 +1,52 @@
 # Backend
 
-Business logic, APIs, database access and third-party integrations (M-Pesa, notifications, delivery). **Approved:** Python 3.13, Django 6.x + Django REST Framework, PostgreSQL (ADR-0002, 0003, 0010, 0011).
+The SokoFresh API and staff admin: **Python 3.13, Django 6.1, Django REST Framework, PostgreSQL** (ADR-0002, 0003), organised as one modular monolith with ten Django apps (ADR-0011).
 
-## Structure
+Status: **Phase 3 foundations** (2026-11-26). The project, settings, custom user model, phone sign-in foundation, error format, health endpoint, OpenAPI contract, tests and CI exist. Business features (catalogue, basket, orders, payments, delivery) start in Phase 4. See `../PHASE_3_BACKEND_COMPLETION_REPORT.md`.
+
+## Quick start
+
+Full beginner steps for Windows: [`documentation/developer/GETTING_STARTED.md`](documentation/developer/GETTING_STARTED.md).
+
+```bash
+cd backend
+uv sync                                   # install the exact locked dependencies
+copy .env.example .env                    # Windows (macOS/Linux: cp); then edit DATABASE_URL
+uv run python manage.py migrate
+uv run python manage.py runserver         # http://127.0.0.1:8000/api/v1/health
+uv run pytest                             # all tests (needs PostgreSQL)
+```
+
+## Layout
 
 | Path | Holds |
 |---|---|
-| `src/domain/` | Core business rules and concepts, independent of frameworks and databases |
-| `src/application/` | Use cases that coordinate domain logic (e.g. "place order") |
-| `src/modules/` | One folder per business area; see `src/modules/README.md` |
-| `src/api/` | HTTP layer: routes, controllers, middleware, validators, serializers, contracts |
-| `src/services/`, `src/repositories/` | Shared services and data-access code |
-| `src/database/` | Migrations, seed data, schemas and queries |
-| `src/integrations/` | Adapters for payments, notifications, delivery and other external services |
-| `src/security/`, `config/`, `logging/`, `monitoring/`, `utils/` | Cross-cutting concerns |
-| `tests/` | Backend-only tests (unit, integration, API, contract, security, performance) |
-| `documentation/` | Backend architecture, API, database and integration notes |
+| `pyproject.toml`, `uv.lock`, `.python-version` | Dependencies (locked by uv) and tool settings (pytest, ruff) |
+| `manage.py` | Django command-line entry point (uses `config.settings.dev` by default) |
+| `config/settings/` | `base.py` (shared), `dev.py`, `test.py`, `prod.py` |
+| `config/urls.py`, `config/api_v1.py` | URL routes: `/api/v1/`, `/_allauth/`, the admin path |
+| `apps/<app>/` | The ten apps: `core`, `accounts`, `catalogue`, `inventory`, `basket`, `orders`, `payments`, `delivery`, `notifications`, `store` |
+| `apps/<app>/tests/` | Tests for that app |
+| `tests/` | Project-wide tests: `integration/` (settings, database), `contract/` (OpenAPI drift), `security/` |
+| `conftest.py` | Shared pytest fixtures |
+| `documentation/` | Architecture, developer guide, API, database and security notes |
 
-## Design intent
+Each app will hold `models.py`, `services.py` (business rules), `api/` (serializers, views), `admin.py`, `tasks.py` where needed, `migrations/` and `tests/`. Apps change each other's data only through `services.py` (backend analysis §1.3).
 
-A **modular monolith**: one deployable application split into well-separated modules. This keeps things simple to run and learn, while allowing a module to be extracted later if a real need appears.
+## Documentation
 
-## Approved change to this layout (ADR-0011)
-At the Phase 3 scaffold the backend becomes **10 Django apps** (core, accounts, catalogue, inventory, basket, orders, payments, delivery, notifications, store), each with `models.py`, `services.py`, `api/`, `admin.py`, `tasks.py` where needed and `tests/`. The `domain/`, `application/`, `services/` and `repositories/` folders above are then removed (with approval at scaffold). Design: `documentation/architecture/BACKEND_ANALYSIS_2026-11.md`.
+| Topic | Document |
+|---|---|
+| Getting started (Windows) | `documentation/developer/GETTING_STARTED.md` |
+| API conventions and contract | `documentation/api/API.md` |
+| Database | `documentation/database/DATABASE.md` |
+| Security | `documentation/security/SECURITY.md` |
+| Design (accepted analysis) | `documentation/architecture/BACKEND_ANALYSIS_2026-11.md` |
+| Foundation decisions | `../docs/decisions/adr/0014-backend-foundation-choices.md` |
 
-Maps (ADR-0013): `GeoService` in the `delivery` app calls Google Geocoding and Routes with a server key from environment variables.
+## Rules
+
+- Never commit `.env` or any real credential. Settings come from environment variables.
+- `shared/contracts/openapi.yaml` is generated; never edit it by hand (see `documentation/api/API.md`).
+- Every model change needs a migration; CI fails if one is missing.
+- Business rules live in the backend; the browser is untrusted.

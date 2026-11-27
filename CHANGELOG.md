@@ -2,6 +2,49 @@
 
 All notable changes to this project are recorded here. Newest entries first.
 
+## [Phase 3 frontend] - 2026-11-27 (branch `feature/phase-3-foundations`)
+
+### Added
+- Next.js 16.4.6 App Router frontend in `frontend/` (TypeScript, Tailwind v4, shadcn/ui pattern, TanStack Query, openapi-fetch, React Hook Form + Zod, MSW for development).
+- Design tokens and self-hosted fonts from the design PDF/Figma; foundation components; typed API client from the shared contract; security headers; same-origin rewrites.
+- 343 Vitest and 53 Playwright tests; frontend CI workflow (green on GitHub); production-build check with a JavaScript budget.
+- Docs: frontend README, architecture, design tokens, components, testing, security, review report; `PHASE_3_FRONTEND_COMPLETION_REPORT.md`; `docs/FUTURE_UPDATES.md`.
+
+### Changed
+- KI-003 resolved (empty `src/pages/`, `src/routes/` removed). Backend SECURITY.md client-IP claim corrected (KI-014).
+
+### Reviewed
+- 5 independent reviewers + re-reviews; 2 High (one fixed, one recorded as deployment blocker KI-014). Report: `frontend/documentation/quality/FRONTEND_REVIEW_REPORT.md`.
+
+## [Phase 3 backend review] - 2026-11-27 (branch `feature/phase-3-foundations`)
+
+### Reviewed
+- Independent review by 6 specialist subagents and 3 re-reviewers: 100 findings (12 High = 10 distinct issues), all High fixed and re-verified. Report: `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`.
+
+### Fixed (highlights)
+- Staff can no longer sign in with an SMS code; admin requires a password sign-in on its own page.
+- Sign-up closed until Phase 5 (it crashed and revealed registered numbers).
+- Rate limits can no longer be bypassed with a spoofed `X-Forwarded-For` or reset by flooding the cache.
+- 401 for not signed in; health check not throttled; JSON errors on API paths only; linear-time log redaction covering tracebacks.
+- Tests: 89 → 211; coverage 94%.
+
+### Added
+- `apps/core/admin_site.py`, `apps/core/authentication.py`, `purge_expired_cache` command, migrations `core.0001`, `accounts.0003`, `.github/workflows/secret-scan.yml`, `.gitleaks.toml`, ADR-0014 items 13–21.
+
+## [Phase 3 backend foundations] - 2026-11-26 (branch `feature/phase-3-foundations`)
+
+### Added
+- Django 6.1.3 backend with uv (Python 3.13): settings split, ten apps, phone-based custom user model and role groups, allauth headless phone-code sign-in foundation, RFC 9457 errors, `GET /api/v1/health`, outbound-HTTP allow list, log redaction.
+- Generated OpenAPI contract `shared/contracts/openapi.yaml` with drift check; shared phone-number fixtures.
+- 89 backend tests (all passing on PostgreSQL); backend CI workflow (lint, tests, pip-audit, gitleaks).
+- ADR-0014; backend developer guide, API, database and security docs; `shared/documentation/CONTRACTS.md`; `PHASE_3_BACKEND_COMPLETION_REPORT.md`.
+
+### Removed
+- Empty `backend/src/` layer folders (ADR-0011 item 4).
+
+### Notes
+- Branch not yet on GitHub (KI-005): delivered as `tmp/phase-3-foundations.bundle` for the owner to push.
+
 ## [Phase 2 follow-up] - 2026-11-26 (owner answers, Google Maps)
 
 ### Added

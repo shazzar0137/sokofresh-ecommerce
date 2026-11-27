@@ -1,6 +1,6 @@
 # 01 Current State
 
-_Last verified: 2026-11-26_
+_Last verified: 2026-11-27 (Phase 3 backend and frontend after independent review)_
 
 ## Verified on disk
 
@@ -16,14 +16,34 @@ _Last verified: 2026-11-26_
 | Backend design | `backend/documentation/architecture/BACKEND_ANALYSIS_2026-11.md` (accepted, amendments B-1 to B-16) |
 | Testing | `docs/testing/TESTING_STRATEGY.md` (approved) |
 | Roadmap | `docs/IMPLEMENTATION_ROADMAP.md` (approved) |
+| Git | `main` = `origin/main` = `965e047`. Branch `feature/phase-3-foundations` **on GitHub** (pushed 2026-11-27); not merged. The owner's local folder is still on `main`: run `git fetch` then `git switch feature/phase-3-foundations` to see the work locally |
+
+## Verified on branch `feature/phase-3-foundations` (not yet merged)
+
+| Item | State |
+|---|---|
+| Backend project | `backend/`: uv (Python 3.13), Django 6.1.3, DRF 3.18.3, drf-spectacular 0.30.0, allauth 65.23.0, django-tasks-db 0.13.0; `config/settings/{base,dev,test,prod}.py` |
+| Apps | Ten apps in `backend/apps/`; code in `core`, `accounts`, `notifications` only |
+| Custom user model | `accounts.User` (phone login, E.164 CHECK, optional unique email); migrations `accounts.0001`, `0002` (role groups) |
+| Sign-in | allauth headless phone + code for existing **customer** accounts; sign-up closed; staff refused code sign-in; admin requires password sign-in on the admin page; unused allauth routes shadowed; SMS: console (dev), in-memory (tests), refusing (prod) |
+| API | `GET /api/v1/health`; RFC 9457 errors; contract `shared/contracts/openapi.yaml` generated, drift-checked |
+| Tests | **211** pytest tests, **all passing** on PostgreSQL 16.15 (2026-11-27), also in random order and in parallel; coverage 94% (incl. subprocess-run production settings); ruff clean; pip-audit: no known vulnerabilities |
+| Independent review | Done 2026-11-27: `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`. All High findings fixed and re-reviewed; 4 Medium items open (KI-011, KI-012, KI-013, API-4) |
+| Backend CI | `.github/workflows/backend-ci.yml` and `secret-scan.yml`: passed on GitHub 2026-11-27 |
+| Docs | backend README, developer guide, API, database, security docs; ADR-0014; `PHASE_3_BACKEND_COMPLETION_REPORT.md` |
+| Frontend app | `frontend/`: Next.js 16.4.6 (App Router, `cacheComponents`), React 19.3.1, TypeScript 5.9.3, Tailwind 4.3.3, radix-ui, TanStack Query 5, openapi-fetch 0.17 + generated `src/api/schema.d.ts`, React Hook Form + Zod 4, MSW 3 (dev only); npm, Node 24; `src/pages/` and `src/routes/` removed (KI-003 resolved) |
+| Frontend routes | `/`, `/shop`, `/basket` (placeholders: no catalogue or basket yet), `/design-system` (preview; 404 in production), 404, error boundaries |
+| Frontend tests | **343** Vitest (unit, component, integration with MSW, jsdom axe) + **53** Playwright (production build: navigation, headers, rewrites via stub backend, axe incl. contrast, 6 viewport widths) **all passing** 2026-11-27; coverage ≈99% lines with enforced thresholds; production-build check passes (initial JS 145 KB gzip); `npm audit` 0 vulnerabilities |
+| CI | Frontend CI, Backend CI and Secret scan **passed on GitHub** (first run, 2026-11-27, commit `bdc7011`) |
+| Frontend review | `frontend/documentation/quality/FRONTEND_REVIEW_REPORT.md` |
 
 ## Not implemented (nothing below exists)
 
-- Application code of any kind; the approved stack is **on paper only**.
-- Package manifests, lockfiles, framework configuration, installed dependencies.
-- Tests of any kind.
-- Version control: the folder is **not** a git repository yet.
-- Any hosting, database instance, or third-party account set up by Claude.
+- On `main`: no application code yet (the backend foundation is on the unmerged branch).
+- Frontend storefront features: catalogue, meal kits, basket, sign-in, checkout, delivery-area picker, tracking, rider screens (Phase 4 onward).
+- Business models and endpoints (catalogue, inventory, basket, orders, payments, delivery): Phase 4 onward.
+- Real SMS provider, account creation at checkout, staff MFA (Phase 5).
+- Any hosting, Neon database, or third-party account set up by Claude.
 
 ## Pre-existing content
 

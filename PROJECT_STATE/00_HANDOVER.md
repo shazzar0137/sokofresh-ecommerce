@@ -1,6 +1,12 @@
 # 00 Handover
 
-_Last updated: 2026-11-26 (owner answers recorded; Google Maps added, ADR-0013; KI-001 resolved)_
+_Last updated: 2026-11-27 (Phase 3 backend **and frontend** foundations built and independently reviewed on `feature/phase-3-foundations`; **pushed to GitHub, all CI green**; not merged)_
+
+> **GitHub:** the Claude GitHub App is installed (2026-11-27); Claude can push feature branches. Branch `feature/phase-3-foundations` is on GitHub with all three workflows green. Owner reviews and merges by pull request.
+>
+> Superseded note: It is in the project folder as `tmp/phase-3-foundations.bundle` (**replaced 2026-11-27** with the reviewed version). Push it with the steps in `PHASE_3_BACKEND_COMPLETION_REPORT.md` §10.
+>
+> **Decisions needed before Phase 4:** KI-011 (customer deletion vs phone constraint) and KI-013 (admin static files). See `backend/documentation/quality/BACKEND_REVIEW_REPORT.md` §9.
 
 ## Continuity rule
 
@@ -16,7 +22,7 @@ Goal: a complete, secure, maintainable, production-ready application.
 
 ## Current phase
 
-**Phase 2 (research, requirements, architecture) is complete.** The owner approved the consolidated architecture on 2026-11-26 (`docs/architecture/TECHNICAL_ARCHITECTURE_PROPOSAL_2026-11.md`, all ten items). **Phase 3 (Foundations) has not started** and needs the owner's go-ahead, because it installs packages.
+**Phase 2 is complete.** **Phase 3 (Foundations) is in progress:** the owner authorised it on 2026-11-26. The **backend** foundation is built and tested on `feature/phase-3-foundations` (see `PHASE_3_BACKEND_COMPLETION_REPORT.md`). The **frontend** foundation is built, tested and independently reviewed on the same branch (see `PHASE_3_FRONTEND_COMPLETION_REPORT.md`, `frontend/documentation/quality/FRONTEND_REVIEW_REPORT.md`). Storefront features are not built.
 
 ## Approved architecture (summary)
 
@@ -37,11 +43,14 @@ Authoritative current architecture: `docs/architecture/SYSTEM_ARCHITECTURE.md`. 
 
 - Phase 1 structure and documentation (`PHASE_1_COMPLETION_REPORT.md`); design PDF and Figma file in `assets/design-references/`.
 - Phase 2: research record (+ addenda), requirements baseline v0.3, frontend analysis (accepted, amended), backend analysis (accepted with amendments), consolidated proposal (approved), ADR-0001 to ADR-0013, approved roadmap and testing strategy.
+- Phase 3 backend independent review (2026-11-27): 6 reviewers + 3 re-reviewers; 100 findings (12 High = 10 distinct issues, all fixed and re-verified); 211 tests passing; 94% coverage; `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`.
+- Phase 3 frontend (same branch, commits `5cb25b2`, `04cc057`, `cfaaaa3`, `bdc7011` + docs): Next.js 16.4.6 App Router, design tokens from the PDF/Figma, foundation components, typed API client from the contract, MSW, security headers, same-origin rewrites, 343 Vitest + 53 Playwright tests passing (also on GitHub Actions), frontend CI workflow (not yet run), 5 independent reviews with corrections.
+- Phase 3 backend (branch `feature/phase-3-foundations`, commits `620f0a6`, `20f316c`, `44f4b67` + a report fix-up): Django 6.1.3 project with uv, settings split, ten apps, phone-based custom user model before the first migration, role groups, allauth headless phone-code sign-in foundation, RFC 9457 errors, `/api/v1/health`, generated contract in `shared/contracts/openapi.yaml` with drift check, outbound-HTTP allow list, log redaction, 89 passing tests on PostgreSQL, GitHub Actions workflow (not yet run), ADR-0014.
 
 ## Outstanding
 
-- **Owner:** go-ahead for Phase 3; KRA PIN and ODPC registration (coming soon); real dispatch point; choose the delivery partner; Google Cloud billing account for Maps; slot times and cut-offs for slot areas. Accountant check of retention: future update.
-- Open known issues: KI-003, KI-004 (`04_KNOWN_ISSUES.md`).
+- **Owner:** open a pull request from `feature/phase-3-foundations` into `main`, check CI, review and merge; confirm ADR-0014; create the Neon development project; KRA PIN and ODPC registration (coming soon); real dispatch point; choose the delivery partner; Google Cloud billing account for Maps; slot times and cut-offs for slot areas. Accountant check of retention: future update.
+- Open known issues: KI-004 to KI-018 (`04_KNOWN_ISSUES.md`); **KI-014 (client IP through the Next.js rewrite) and KI-007 block any deployment**.
 
 ## Architectural constraints
 
@@ -54,4 +63,7 @@ Authoritative current architecture: `docs/architecture/SYSTEM_ARCHITECTURE.md`. 
 
 ## Next action
 
-Ask the owner for the Phase 3 go-ahead. Then: initialise git + private GitHub repo; scaffold Next.js (fix KI-003) and the Django project with the custom user model; CI; contract pipeline; design tokens. Explain each package before installing.
+1. Owner reviews `feature/phase-3-foundations` on GitHub and merges by pull request (CI green).
+2. Backend: read frontend contract response F-1 to F-8 (`shared/documentation/CONTRACTS.md`), especially F-8 and KI-014 (proxy headers).
+3. Owner/Architect: decide KI-011 and KI-013; confirm ADR-0014 (items 1–21).
+4. Phase 4 catalogue slice (backend API first, then frontend catalogue with a mapper from generated types to card props), only after the above. Explain each new package before installing.

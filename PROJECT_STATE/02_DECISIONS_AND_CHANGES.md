@@ -4,6 +4,18 @@ Approved decisions and significant changes, newest first. Formal technology deci
 
 | ID | Date | Decision / change | Status | Reason |
 |---|---|---|---|---|
+| D-049 | 2026-11-27 | Treat every item in an analysis's decision list that the owner did not comment on as approved | Approved (owner) | Owner instruction |
+| D-048 | 2026-11-27 | Vercel Analytics remains the analytics candidate; not installed until hosting (ADR-0007) and a privacy check are settled | Approved (owner) | ADR-0009 updated |
+| D-047 | 2026-11-27 | Pantry and other extra categories left for later (FU-1 in `docs/FUTURE_UPDATES.md`, new register) | Approved (owner) | Owner comment on analysis §11 |
+| D-046 | 2026-11-27 | Frontend Phase 3 choices within the approved architecture (P3-F1 to P3-F8): fonts via `next/font/local`; interim static CSP (KI-015); hand-written shadcn components + `components.json`; TypeScript 5.9; ESLint 9; committed generated types + drift check; `/design-system` preview; no placeholder business data in header/footer | Accepted under delegated authority; **owner to confirm** | `frontend/documentation/architecture/FRONTEND_ARCHITECTURE.md` §7 |
+| D-045 | 2026-11-27 | Independent frontend review (5 reviewers + re-reviews); corrections in `bdc7011` | Done | Quality gate |
+| D-044 | 2026-11-27 | KI-003 resolved: empty `frontend/src/pages/` and `src/routes/` removed; App Router in `src/app/` | Done (ADR-0011) | Next.js conflict |
+| D-043 | 2026-11-27 | ADR-0014 extended (items 13–21): sign-up closed until Phase 5; staff code sign-in refused + admin password-session rule; trusted proxy count; cache sizing + purge job; unused allauth routes shadowed; 401 for not signed in; allauth without headless extra; coverage dev tool; separate secret-scan workflow | Accepted under delegated authority; **owner to confirm** | Fixes from `backend/documentation/quality/BACKEND_REVIEW_REPORT.md` |
+| D-042 | 2026-11-27 | Independent backend review completed (6 reviewers, 3 re-reviewers); corrections committed `9b32959`, `6b776d7` and the report commit | Done | Owner instruction: post-implementation audit |
+| D-041 | 2026-11-26 | Branch delivered to the owner as a git bundle (`tmp/phase-3-foundations.bundle`) because the session had no GitHub write access; owner pushes with own credentials | Done; owner action pending | KI-005; no token requested (Phase 3 instruction) |
+| D-040 | 2026-11-26 | Backend code layout `backend/apps/<app>/` + `backend/config/`; empty `backend/src/` layer folders removed | Done (ADR-0011 item 4, ADR-0014 #5) | Approved removal at scaffold |
+| D-039 | 2026-11-26 | Phase 3 foundation choices (custom RFC 9457 handler, 422 for validation, ruff, database cache, E.164 at allauth endpoints, code format/limits, fail-closed SMS, HSTS start, deferred packages, gitleaks tool, PostgreSQL 17 in CI) | Accepted under delegated authority; **owner to confirm** | ADR-0014 |
+| D-038 | 2026-11-26 | Owner authorised Phase 3 backend foundations, with overnight execution | Approved (owner) | Phase 3 instruction |
 | D-037 | 2026-11-26 | Removed `frontend/public/assets/` and `tests/stress/` (empty except `.gitkeep`) | Done (owner approved) | KI-001 |
 | D-036 | 2026-11-26 | Record retention: accountant check deferred to a future update; proposed conservative periods apply meanwhile | Approved (owner) | — |
 | D-035 | 2026-11-26 | KRA PIN and ODPC registration: coming soon (small business) | Fact (owner) | — |

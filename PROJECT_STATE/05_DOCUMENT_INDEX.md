@@ -22,6 +22,7 @@ Paths are relative to the project root. Update this index whenever a document is
 | `CHANGELOG.md` | Change history |
 | `TECHNOLOGY_DECISIONS_PENDING.md` | Open technology choices |
 | `PHASE_1_COMPLETION_REPORT.md` | Phase 1 verification results and directory tree |
+| `PHASE_3_BACKEND_COMPLETION_REPORT.md` | Phase 3 backend: what was built, dependencies, tests run, security, CI, commits, owner push steps, outstanding issues |
 
 ## Planning and guides
 | Document | Purpose |
@@ -38,14 +39,33 @@ Paths are relative to the project root. Update this index whenever a document is
 | `docs/architecture/SYSTEM_ARCHITECTURE.md` | **Current approved architecture** |
 | `docs/architecture/TECHNICAL_ARCHITECTURE_PROPOSAL_2026-11.md` | Consolidated technical architecture proposal reconciling frontend and backend research (Approved 2026-11-26; decision record) |
 | `docs/IMPLEMENTATION_ROADMAP.md` | Approved phased roadmap and cost estimate |
+| `backend/README.md` | Backend overview, layout, quick start |
+| `backend/documentation/developer/GETTING_STARTED.md` | Beginner setup on Windows: uv, PostgreSQL/Neon, `.env`, migrate, run, tests |
+| `backend/documentation/api/API.md` | API conventions as implemented, error format, endpoints, sign-in flow, contract regeneration |
+| `backend/documentation/database/DATABASE.md` | Database configuration, tables, custom user model, migrations |
+| `backend/documentation/security/SECURITY.md` | Backend security controls with their tests, and known gaps |
+| `backend/documentation/quality/BACKEND_REVIEW_REPORT.md` | Independent post-implementation review of the Phase 3 backend: agents, findings, tests, coverage, corrections, outstanding issues, assessment |
+| `shared/documentation/CONTRACTS.md` | How the generated OpenAPI contract is shared; points F-1 to F-7 and the Frontend's response (F-8) |
+| `PHASE_3_FRONTEND_COMPLETION_REPORT.md` | Phase 3 frontend: files, dependencies, configuration, tokens, API readiness, tests, security, Git, remaining issues |
+| `frontend/documentation/quality/FRONTEND_REVIEW_REPORT.md` | Independent frontend review: agents, findings, corrections, re-reviews, test evidence |
+| `frontend/documentation/architecture/FRONTEND_ARCHITECTURE.md` | Frontend architecture as implemented, and Phase 3 decisions P3-F1 to P3-F8 |
+| `frontend/documentation/design-system/DESIGN_TOKENS.md` | Design tokens extracted from the PDF/Figma, with contrast ratios |
+| `frontend/documentation/components/COMPONENTS.md` | Foundation components and their props |
+| `frontend/documentation/testing/TESTING.md` | Frontend test layers, how to run them, gaps |
+| `frontend/documentation/security/SECURITY.md` | Frontend security controls, interim CSP risk, notes for the backend |
+| `docs/FUTURE_UPDATES.md` | Register of ideas deliberately left for later (FU-n) |
+| `shared/contracts/openapi.yaml` | Generated API contract (never edit by hand) |
+| `shared/test-fixtures/phone-numbers.json` | Shared phone-number test cases |
+| `.github/workflows/backend-ci.yml` | Backend CI: lint, tests + PostgreSQL, pip-audit |
+| `.github/workflows/secret-scan.yml`, `.gitleaks.toml` | Secret scan (gitleaks) on every push, with allow list for fictional test values |
 | `backend/documentation/architecture/BACKEND_ANALYSIS_2026-11.md` | Backend analysis: modules, domain model, database rules, API inventory, payments, libraries, decisions requested (Accepted with amendments 2026-11-26) |
 | `frontend/documentation/architecture/FRONTEND_ANALYSIS_2026-11.md` | Frontend analysis: requirements, routes, components, design system, responsive, accessibility, library choices, design issues, sequence (Accepted 2026-11-26, amended) |
 
 ## Architecture Decision Records (all Accepted; see `docs/decisions/adr/README.md`)
-`docs/decisions/adr/0001` to `0013`: frontend, backend, database, API, authentication, payments, hosting, admin, frontend libraries, backend libraries, architecture amendments, payments at launch, maps and location
+`docs/decisions/adr/0001` to `0014`: frontend, backend, database, API, authentication, payments, hosting, admin, frontend libraries, backend libraries, architecture amendments, payments at launch, maps and location, backend foundation choices
 
 ## Area READMEs
-`frontend/README.md`, `frontend/src/features/README.md`, `backend/README.md`, `backend/src/domain/README.md`, `backend/src/modules/README.md`, `shared/README.md`, `security/README.md`, `tests/README.md`, `infrastructure/README.md`, `assets/README.md`, `scripts/README.md`, `tools/README.md`, `logs/README.md`
+`frontend/README.md`, `frontend/src/features/README.md`, `backend/README.md`, `shared/README.md`, `security/README.md`, `tests/README.md`, `infrastructure/README.md`, `assets/README.md`, `scripts/README.md`, `tools/README.md`, `logs/README.md`
 
 ## Reference materials
 | Item | Location |

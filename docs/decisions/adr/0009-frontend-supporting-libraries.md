@@ -23,7 +23,7 @@ See the analysis §7 for each option, with reasons.
 | Visual regression | Playwright `toHaveScreenshot()`, baselines generated in CI |
 | Component workshop | Storybook deferred; reassess at about 10 design-system components |
 | Translations (Swahili UI) | Library deferred to Phase 10; `lang` attributes used now |
-| Analytics | Deferred; decided with privacy (Kenya DPA) and hosting |
+| Analytics | **Vercel Analytics remains the candidate for now** (owner, 2026-11-27). Not installed yet: it only works when the site is hosted on Vercel (ADR-0007 Option B; the preferred Option A is Railway), and it needs a privacy check (Kenya DPA) before it is switched on |
 | Package manager | npm |
 
 Not adopted: other UI kits (MUI, Chakra), Redux, CSS-in-JS, hosted search.

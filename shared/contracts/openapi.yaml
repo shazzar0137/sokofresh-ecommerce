@@ -1,0 +1,121 @@
+openapi: 3.0.3
+info:
+  title: SokoFresh API
+  version: 0.1.0
+  description: REST API for the SokoFresh storefront and rider screens. Generated
+    from the Django code by drf-spectacular; do not edit the generated file by hand.
+    Sign-in endpoints are provided by django-allauth headless under /_allauth/ and
+    are documented by allauth, not in this file.
+paths:
+  /api/v1/health:
+    get:
+      operationId: health_retrieve
+      description: Liveness and database check for the hosting platform. Returns no
+        business data.
+      summary: Service health
+      tags:
+      - health
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: The service and its database are reachable.
+        4XX:
+          description: Client error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        5XX:
+          description: Server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+components:
+  schemas:
+    Health:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthStatusEnum'
+        database:
+          $ref: '#/components/schemas/HealthStatusEnum'
+      required:
+      - database
+      - status
+    HealthStatusEnum:
+      enum:
+      - ok
+      type: string
+      description: '* `ok` - ok'
+    ProblemDetail:
+      type: object
+      description: RFC 9457 problem details. Returned for every error response.
+      properties:
+        type:
+          type: string
+          example: about:blank
+        title:
+          type: string
+          example: Validation failed
+        status:
+          type: integer
+          example: 422
+        detail:
+          type: string
+          example: One or more fields are invalid.
+        code:
+          type: string
+          enum:
+          - validation_error
+          - malformed_request
+          - not_authenticated
+          - authentication_failed
+          - permission_denied
+          - not_found
+          - method_not_allowed
+          - not_acceptable
+          - unsupported_media_type
+          - rate_limited
+          - csrf_failed
+          - bad_request
+          - service_unavailable
+          - error
+          - server_error
+          description: Stable machine-readable error code (switch on this, not on
+            title).
+          example: validation_error
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+      required:
+      - type
+      - title
+      - status
+      - detail
+      - code
+      - errors
+    FieldError:
+      type: object
+      properties:
+        field:
+          type: string
+          nullable: true
+          description: Dotted path of the field, or null for whole-request errors.
+          example: phone
+        code:
+          type: string
+          example: invalid
+        message:
+          type: string
+          example: Enter a valid Kenyan mobile number.
+      required:
+      - field
+      - code
+      - message

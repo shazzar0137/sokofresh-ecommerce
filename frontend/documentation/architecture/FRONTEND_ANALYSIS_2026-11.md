@@ -349,7 +349,7 @@ Versions checked 2026-11-26: Next.js 16.x is current, with monthly scheduled sec
 | 8 | Visual regression | Playwright `toHaveScreenshot()`; hosted (Chromatic/Percy/Argos, free tiers ~5,000 shots/month) | **Playwright built-in**, baselines generated in the CI Docker image | Free, already in our stack; hosted tools can be added later if review becomes painful |
 | 9 | Component workshop | Storybook; none | **Defer** until the design system has ~10 components; then reassess | Useful for documenting the design system, but a large extra tool while learning |
 | 10 | Translations (Swahili UI is "L") | next-intl now; later; none | **Defer the library**; keep UI copy in components but use `lang` attributes and avoid text baked into images | Avoids complexity now; next-intl is the likely choice in Phase 10 |
-| 11 | Analytics | Vercel Analytics, Plausible, none | **Defer**; decide with privacy (Kenya DPA) and hosting | Must not collect personal data without a lawful basis |
+| 11 | Analytics | Vercel Analytics, Plausible, none | **Vercel Analytics remains the candidate for now** (owner, 2026-11-27); not installed until hosting (ADR-0007) and the privacy check are settled | Must not collect personal data without a lawful basis. Vercel Analytics works only on Vercel hosting |
 | 12 | Package manager | npm, pnpm | **npm** (Phase 3 decision) | Comes with Node, simplest for learning; pnpm possible later |
 
 What was deliberately **not** added: a separate UI kit (MUI, Chakra) — shadcn covers it; Redux — Zustand is enough; a CSS-in-JS library — Tailwind covers it; a search service (Algolia) — PostgreSQL search is approved (ADR-0003).
@@ -427,10 +427,14 @@ Mocks are replaced by the real API endpoint by endpoint as the backend delivers 
 
 ## 11. Decisions requested from the owner / Project Architect
 
-1. Approve this analysis as the frontend baseline (or request changes).
-2. Approve the supporting libraries in §7 (to be recorded as ADR-0009).
-3. Basket model: device-stored guest basket validated by a quote endpoint, or server basket for everyone (§8, with Backend).
-4. Delivery promise model (D-4) and testimonial handling (D-6).
-5. Category for tea and pantry items (D-12).
-6. Folder clean-up for KI-003 at scaffold: remove `src/pages/` and `src/routes/`, add `src/components/ui/` and `src/components/rider/`.
-7. Owner action: copy the design PDF (and `.fig` file) into `assets/design-references/` so design tokens can be extracted.
+> **Status (owner, 2026-11-27):** every item below that the owner did not comment on is **approved**. Items 1–3 approved (item 2 with the analytics note in §7 #11; item 3 decided as a server basket, D-015); item 4 approved in Phase 2 (D-016 testimonial, D-017 delivery promise); item 5 partly left for later (FU-1); items 6–7 done.
+
+_Owner rule (2026-11-27): any item here that the owner has not commented on is approved._
+
+1. Approve this analysis as the frontend baseline (or request changes). **Approved** (2026-11-26).
+2. Approve the supporting libraries in §7 (to be recorded as ADR-0009). **Approved** (2026-11-26; ADR-0009). Analytics: Vercel Analytics remains the candidate for now (owner, 2026-11-27).
+3. Basket model: device-stored guest basket validated by a quote endpoint, or server basket for everyone (§8, with Backend). **Decided:** server basket for everyone (D-015).
+4. Delivery promise model (D-4) and testimonial handling (D-6). **Decided in Phase 2:** fast delivery for nearby areas, slots elsewhere (D-017); one placeholder testimonial, deleted before launch (D-016).
+5. Category for tea and pantry items (D-12). **Tea decided:** Beverages (Vinywaji), D-018. **Pantry and other categories: left for later**, recorded as FU-1 in `docs/FUTURE_UPDATES.md` (owner, 2026-11-27).
+6. Folder clean-up for KI-003 at scaffold: remove `src/pages/` and `src/routes/`, add `src/components/ui/` and `src/components/rider/`. **Done 2026-11-27:** both folders held only empty `.gitkeep` placeholders (no code or documents), so nothing was lost; routes now live in `src/app/` (App Router). `src/components/ui/` added; `src/components/rider/` deferred until rider screens are built.
+7. ~~Owner action: copy the design PDF (and `.fig` file) into `assets/design-references/`~~ **Done:** both files are in `assets/design-references/`; design tokens were extracted from them on 2026-11-27 (`frontend/documentation/design-system/DESIGN_TOKENS.md`).
