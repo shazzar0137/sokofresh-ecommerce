@@ -45,7 +45,15 @@ Paths are relative to the project root. Update this index whenever a document is
 | `backend/documentation/database/DATABASE.md` | Database configuration, tables, custom user model, migrations |
 | `backend/documentation/security/SECURITY.md` | Backend security controls with their tests, and known gaps |
 | `backend/documentation/quality/BACKEND_REVIEW_REPORT.md` | Independent post-implementation review of the Phase 3 backend: agents, findings, tests, coverage, corrections, outstanding issues, assessment |
-| `shared/documentation/CONTRACTS.md` | How the generated OpenAPI contract is shared; points F-1 to F-6 for the Frontend |
+| `shared/documentation/CONTRACTS.md` | How the generated OpenAPI contract is shared; points F-1 to F-7 and the Frontend's response (F-8) |
+| `PHASE_3_FRONTEND_COMPLETION_REPORT.md` | Phase 3 frontend: files, dependencies, configuration, tokens, API readiness, tests, security, Git, remaining issues |
+| `frontend/documentation/quality/FRONTEND_REVIEW_REPORT.md` | Independent frontend review: agents, findings, corrections, re-reviews, test evidence |
+| `frontend/documentation/architecture/FRONTEND_ARCHITECTURE.md` | Frontend architecture as implemented, and Phase 3 decisions P3-F1 to P3-F8 |
+| `frontend/documentation/design-system/DESIGN_TOKENS.md` | Design tokens extracted from the PDF/Figma, with contrast ratios |
+| `frontend/documentation/components/COMPONENTS.md` | Foundation components and their props |
+| `frontend/documentation/testing/TESTING.md` | Frontend test layers, how to run them, gaps |
+| `frontend/documentation/security/SECURITY.md` | Frontend security controls, interim CSP risk, notes for the backend |
+| `docs/FUTURE_UPDATES.md` | Register of ideas deliberately left for later (FU-n) |
 | `shared/contracts/openapi.yaml` | Generated API contract (never edit by hand) |
 | `shared/test-fixtures/phone-numbers.json` | Shared phone-number test cases |
 | `.github/workflows/backend-ci.yml` | Backend CI: lint, tests + PostgreSQL, pip-audit |

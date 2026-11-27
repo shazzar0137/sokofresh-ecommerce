@@ -56,6 +56,40 @@ test.describe("responsive layout", () => {
     });
   }
 
+  for (const width of [320, 360]) {
+    test(`${width}px: card price is fully visible and the button stays inside the card, even with a 4-digit price (UX-7)`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/design-system");
+      await expect(page.locator("#products article")).toHaveCount(4);
+      // Wait until the cards are laid out; measuring earlier reads zero sizes and passes falsely.
+      for (const card of await page.locator("#products article").all()) await expect(card).toBeVisible();
+      // Measured in the page in one go (no per-element round trips).
+      const overflows = await page.locator("#products").evaluate((section) =>
+        [...section.querySelectorAll("article")].map((card) => {
+          const c = card.getBoundingClientRect();
+          const b = card.querySelector("button")!.getBoundingClientRect();
+          // The current price text (first span of the price line).
+          const price = card.querySelector("p.flex > span")!.getBoundingClientRect();
+          const sameRow = price.bottom > b.top && price.top < b.bottom;
+          return {
+            name: card.querySelector("h3")?.textContent,
+            width: c.width,
+            left: b.left - c.left,
+            right: c.right - b.right,
+            // Negative when the price runs under the button.
+            priceGap: sameRow ? b.left - price.right : 0,
+          };
+        }),
+      );
+      for (const o of overflows) {
+        expect(o.width, `${o.name} card has no size`).toBeGreaterThan(100);
+        expect(o.left, `${o.name} button sticks out on the left`).toBeGreaterThanOrEqual(0);
+        expect(o.right, `${o.name} button sticks out on the right`).toBeGreaterThanOrEqual(0);
+        expect(o.priceGap, `${o.name} price is hidden under the button`).toBeGreaterThanOrEqual(0);
+      }
+    });
+  }
+
   test("hero headline uses the design's 72 px at 1440 and 44 px at 390", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");

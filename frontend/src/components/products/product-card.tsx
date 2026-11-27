@@ -96,8 +96,9 @@ export function ProductCard({
         </H>
         <OriginLine localName={localName} localNameLang={localNameLang} origin={origin} />
         <StockNote remaining={stockRemaining} isLow={stockIsLow} />
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <PriceDisplay price={price} wasPrice={wasPrice} />
+        {/* Wraps on narrow phones so a long price never pushes the button out of the card (review UX-7). */}
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-2 pt-2">
+          <PriceDisplay price={price} wasPrice={wasPrice} className="min-w-0" />
           {action}
         </div>
       </div>

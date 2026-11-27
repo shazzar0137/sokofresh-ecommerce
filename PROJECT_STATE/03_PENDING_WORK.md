@@ -1,10 +1,11 @@
 # 03 Pending Work
 
-_Updated 2026-11-26 night. Phase 3 authorised by the owner; backend foundation built on `feature/phase-3-foundations`._
+_Updated 2026-11-27. Phase 3 backend and frontend foundations built on `feature/phase-3-foundations`._
 
 ## Owner decisions and actions
 - [x] Go-ahead for Phase 3 (Foundations) (2026-11-26).
-- [ ] **Push `feature/phase-3-foundations`** from `tmp/phase-3-foundations.bundle` (`PHASE_3_BACKEND_COMPLETION_REPORT.md` §10); check CI; review; merge by pull request.
+- [x] Claude GitHub App installed; branch pushed; CI green (2026-11-27).
+- [ ] **Review and merge** `feature/phase-3-foundations` by pull request. Older note: push (`PHASE_3_BACKEND_COMPLETION_REPORT.md` §10); check CI; review; merge by pull request.
 - [ ] Confirm ADR-0014 (backend foundation choices, items 1–21).
 - [ ] Decide KI-011 (customer deletion vs phone constraint) **before Phase 4**.
 - [ ] Decide KI-013 (admin static files in production, e.g. WhiteNoise).
@@ -26,14 +27,16 @@ _Updated 2026-11-26 night. Phase 3 authorised by the owner; backend foundation b
 ## Phase 3: Foundations
 - [x] git + GitHub repository (owner created `shazzar0137/sokofresh-ecommerce`; local `main` = `origin/main`).
 - [ ] Branch protection on `main` (require CI and a pull request): owner, in GitHub **Settings → Branches**.
-- [ ] Frontend scaffold: Next.js 16 + TypeScript + Tailwind + ESLint; fix KI-003; shadcn/ui; Vitest/RTL; Playwright + axe; MSW.
-- [ ] Design tokens and fonts extracted from the PDF/Figma file.
+- [x] Frontend scaffold: Next.js 16 + TypeScript + Tailwind + ESLint; KI-003 fixed; shadcn/ui pattern; Vitest/RTL; Playwright + axe; MSW (2026-11-27).
+- [x] Design tokens and fonts extracted from the PDF/Figma file (2026-11-27).
+- [ ] Owner: confirm D-046 (frontend Phase 3 choices P3-F1 to P3-F8).
 - [x] Backend scaffold: uv, Django 6.1.3, 10 apps, **custom user model before first migration**, django-environ settings, pytest (on the branch, 2026-11-26).
 - [ ] Neon dev branch (owner account needed; local PostgreSQL used meanwhile).
 - [x] drf-spectacular → `shared/contracts/openapi.yaml`; drift check (backend test).
-- [ ] openapi-typescript generation (Frontend); Frontend to confirm contract points F-1 to F-6 (`shared/documentation/CONTRACTS.md`).
-- [x] Backend CI workflow with PostgreSQL service, pip-audit and gitleaks (written; **first run pending the push**).
-- [ ] Frontend CI jobs (Frontend conversation).
+- [x] openapi-typescript generation + drift check; contract points F-1 to F-7 answered, F-8 raised (2026-11-27).
+- [x] Backend CI workflow with PostgreSQL service, pip-audit and gitleaks (passed on GitHub 2026-11-27).
+- [x] Frontend CI workflow (passed on GitHub 2026-11-27).
+- [ ] Phase 4 frontend: catalogue mapper (generated types → card props; drop bad prices), search box keeps `q` (UX-5), add-to-basket names the product (A11Y-3), visual-regression baselines in CI (KI-016), MSW response validation (QA-15), Bricolage single-weight font (PERF-5).
 - [x] Shared phone-number test list `shared/test-fixtures/phone-numbers.json` (used by backend tests).
 - [x] Verify Django 6 support of the ADR-0010 packages installed so far (tests pass on 6.1.3; see KI-010). Remaining packages checked when installed (Phase 4+).
 - [ ] Maps keys handled as environment configuration (no real key in the repo); `GeoService` and `AddressPicker` built in Phase 6.
@@ -47,5 +50,7 @@ See `docs/IMPLEMENTATION_ROADMAP.md` (Phases 4–10): catalogue slice; accounts 
 - [ ] Phase 4: coverage report in CI; Schemathesis and time-machine as the testing strategy plans.
 - [ ] Phase 8: schedule `manage.py purge_expired_cache` (host cron); proxy must overwrite `X-Forwarded-Proto`; origin not directly reachable.
 - [ ] Threat model and data classification (Phase 3/4).
-- [ ] CSP approach decision (risk R-9) in a Phase 3 security spike.
+- [ ] CSP: interim static policy in place (KI-015); decide SRI or route nonces before the first sign-in/checkout screen.
+- [ ] **KI-014** proxy/client-IP design and test (Backend + Phase 8) **before any deployment**.
+- [ ] Before launch: `__Host-` cookie names (KI-017); CSP reporting; brotli at the edge (PERF-6); WebKit + manual accessibility checks (KI-016).
 - [ ] Pochi verification procedure for staff (what to check on the M-Pesa statement) before Phase 7.

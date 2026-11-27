@@ -2,6 +2,20 @@
 
 All notable changes to this project are recorded here. Newest entries first.
 
+## [Phase 3 frontend] - 2026-11-27 (branch `feature/phase-3-foundations`)
+
+### Added
+- Next.js 16.4.6 App Router frontend in `frontend/` (TypeScript, Tailwind v4, shadcn/ui pattern, TanStack Query, openapi-fetch, React Hook Form + Zod, MSW for development).
+- Design tokens and self-hosted fonts from the design PDF/Figma; foundation components; typed API client from the shared contract; security headers; same-origin rewrites.
+- 343 Vitest and 53 Playwright tests; frontend CI workflow (green on GitHub); production-build check with a JavaScript budget.
+- Docs: frontend README, architecture, design tokens, components, testing, security, review report; `PHASE_3_FRONTEND_COMPLETION_REPORT.md`; `docs/FUTURE_UPDATES.md`.
+
+### Changed
+- KI-003 resolved (empty `src/pages/`, `src/routes/` removed). Backend SECURITY.md client-IP claim corrected (KI-014).
+
+### Reviewed
+- 5 independent reviewers + re-reviews; 2 High (one fixed, one recorded as deployment blocker KI-014). Report: `frontend/documentation/quality/FRONTEND_REVIEW_REPORT.md`.
+
 ## [Phase 3 backend review] - 2026-11-27 (branch `feature/phase-3-foundations`)
 
 ### Reviewed

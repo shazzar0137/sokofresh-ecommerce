@@ -222,6 +222,16 @@ describe("review follow-ups (QA-4, QA-8, ARCH-3)", () => {
     expect(Date.now() - started).toBeLessThan(2000);
   });
 
+  it("builds every request with credentials: same-origin (checked on the Request itself)", async () => {
+    const seen: Request[] = [];
+    const spy: typeof fetch = async (input) => {
+      seen.push(input as Request);
+      return HttpResponse.json({ status: "ok", database: "ok" });
+    };
+    await unwrap(createApiClient({ baseUrl: ORIGIN, fetch: spy }).GET("/api/v1/health"));
+    expect(seen[0]?.credentials).toBe("same-origin");
+  });
+
   it("sends cookies only to the same origin (credentials: same-origin)", async () => {
     let credentials: RequestCredentials | undefined;
     server.use(

@@ -57,6 +57,9 @@ describe("MockDataBanner", () => {
 
   it("labels mock data clearly when mocking is on", () => {
     render(<MockDataBanner enabled />);
-    expect(screen.getByRole("note")).toHaveTextContent(/mock data, not the live SokoFresh backend/);
+    const note = screen.getByRole("note");
+    expect(note).toHaveTextContent(/mock data, not the live SokoFresh backend/);
+    // Stable marker used by scripts/check-production-build.mjs.
+    expect(note).toHaveAttribute("data-mock-banner");
   });
 });

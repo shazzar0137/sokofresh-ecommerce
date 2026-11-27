@@ -96,7 +96,9 @@ export default function DesignSystemPage() {
             Ugali na sukuma
           </p>
           <p className="font-display text-h3 font-extrabold">Named farms</p>
-          <p className="font-display text-product font-extrabold">Sukuma wiki bunch</p>
+          <p lang="sw" className="font-display text-product font-extrabold">
+            Sukuma wiki bunch
+          </p>
           <Text variant="lead">Vegetables from Kinangop, mangoes from Kitui.</Text>
           <Text variant="sub">Prices today. Stock is limited.</Text>
           <Text>Body text in Figtree Regular.</Text>
@@ -145,6 +147,7 @@ export default function DesignSystemPage() {
             <li>
               <ProductCard
                 name="Sukuma wiki bunch"
+                nameLang="sw"
                 localName="Kale"
                 localNameLang="en"
                 origin="Kinangop"
@@ -176,6 +179,25 @@ export default function DesignSystemPage() {
                 media={<Emoji>🍅</Emoji>}
                 action={
                   <Button size="sm" aria-label="Add Tomatoes 1kg to basket">
+                    Add
+                  </Button>
+                }
+              />
+            </li>
+            <li>
+              <ProductCard
+                name="Kienyeji chicken"
+                localName="Kuku"
+                origin="Machakos"
+                price={1250}
+                wasPrice={1400}
+                discountPercent={11}
+                stockRemaining={4}
+                stockIsLow
+                tone="peach"
+                media={<Emoji>🍗</Emoji>}
+                action={
+                  <Button size="sm" aria-label="Add Kienyeji chicken to basket">
                     Add
                   </Button>
                 }
