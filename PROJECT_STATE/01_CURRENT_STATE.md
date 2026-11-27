@@ -1,6 +1,6 @@
 # 01 Current State
 
-_Last verified: 2026-11-27 afternoon (Phase 3 on `main`; integration-review corrections on PR #2)_
+_Last verified: 2026-11-27 evening (GitHub checked: PR #2 merged, `main` = `809964b`, all four workflows green on `main`)_
 
 ## Verified on disk
 
@@ -16,7 +16,7 @@ _Last verified: 2026-11-27 afternoon (Phase 3 on `main`; integration-review corr
 | Backend design | `backend/documentation/architecture/BACKEND_ANALYSIS_2026-11.md` (accepted, amendments B-1 to B-16) |
 | Testing | `docs/testing/TESTING_STRATEGY.md` (approved) |
 | Roadmap | `docs/IMPLEMENTATION_ROADMAP.md` (approved) |
-| Git | `origin/main` = `0e6c91d`: PR #1 merged by the owner on 2026-11-27 06:16 (before the integration review). `main` has **no branch protection** (KI-020). Integration-review corrections on `fix/phase-3-integration-review` (PR #2, not merged). The owner's local folder was updated to `0e6c91d` with `git pull` on 2026-11-27 (KI-021 resolved; some empty old folders remain, harmless) |
+| Git | `origin/main` = `809964b`: PR #1 (Phase 3) merged 2026-11-27 06:16 and PR #2 (integration-review corrections) merged 2026-11-27 15:13 by the owner. Ruleset "Protect main" active: no deletion, no force push, PR required (0 approvals), required check *Secret scan (gitleaks)* only (KI-020: seven more to add). The owner's local folder was updated to `0e6c91d` with `git pull` on 2026-11-27 (KI-021 resolved; some empty old folders remain, harmless) |
 
 ## Phase 3 as merged to `main` (PR #1; integration review: `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md`)
 
@@ -27,14 +27,14 @@ _Last verified: 2026-11-27 afternoon (Phase 3 on `main`; integration-review corr
 | Custom user model | `accounts.User` (phone login, E.164 CHECK, optional unique email); migrations `accounts.0001`, `0002` (role groups) |
 | Sign-in | allauth headless phone + code for existing **customer** accounts; sign-up closed; staff refused code sign-in; admin requires password sign-in on the admin page; unused allauth routes shadowed; SMS: console (dev), in-memory (tests), refusing (prod) |
 | API | `GET /api/v1/health`; RFC 9457 errors; contract `shared/contracts/openapi.yaml` generated, drift-checked |
-| Tests | On `main`: 211 pytest tests passing. **On PR #2: 272 passing** on PostgreSQL 16.15 (2026-11-27); branch coverage 96% including the subprocess-run production settings (CI minimum 85%); ruff clean; pip-audit: no known vulnerabilities |
+| Tests | **272** pytest tests passing on `main` (PostgreSQL 16.15 (2026-11-27); branch coverage 96% including the subprocess-run production settings (CI minimum 85%); ruff clean; pip-audit: no known vulnerabilities |
 | Independent review | Done 2026-11-27: `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`. All High findings fixed and re-reviewed; 4 Medium items open (KI-011, KI-012, KI-013, API-4) |
 | Backend CI | `.github/workflows/backend-ci.yml` and `secret-scan.yml`: passed on GitHub 2026-11-27 |
 | Docs | backend README, developer guide, API, database, security docs; ADR-0014; `PHASE_3_BACKEND_COMPLETION_REPORT.md` |
 | Frontend app | `frontend/`: Next.js 16.4.6 (App Router, `cacheComponents`), React 19.3.1, TypeScript 5.9.3, Tailwind 4.3.3, radix-ui, TanStack Query 5, openapi-fetch 0.17 + generated `src/api/schema.d.ts`, React Hook Form + Zod 4, MSW 3 (dev only); npm, Node 24; `src/pages/` and `src/routes/` removed (KI-003 resolved) |
 | Frontend routes | `/`, `/shop`, `/basket` (placeholders: no catalogue or basket yet), `/design-system` (preview; 404 in production), 404, error boundaries |
-| Frontend tests | **343** Vitest on `main`, **360 on PR #2** (unit, component, integration with MSW, jsdom axe) + **53** Playwright (production build: navigation, headers, rewrites via stub backend, axe incl. contrast, 6 viewport widths) **all passing** 2026-11-27; coverage ≈99% lines with enforced thresholds; production-build check passes (initial JS 145 KB gzip); `npm audit` 0 vulnerabilities |
-| CI | Frontend CI, Backend CI and Secret scan green on `main`. PR #2 adds **Real-stack CI** (real Django with production settings behind `next start`, `tests/end-to-end/real-stack-smoke.sh`) and removes the pull-request path filters; all four green on PR #2 |
+| Frontend tests | **360** Vitest (unit, component, integration with MSW, jsdom axe) + **53** Playwright (production build: navigation, headers, rewrites via stub backend, axe incl. contrast, 6 viewport widths) **all passing** 2026-11-27; coverage ≈99% lines with enforced thresholds; production-build check passes (initial JS 145 KB gzip); `npm audit` 0 vulnerabilities |
+| CI | Backend CI, Frontend CI, Secret scan and **Real-stack CI** (real Django with production settings behind `next start`, `tests/end-to-end/real-stack-smoke.sh`) all green on `main` at `809964b`; no path filters on pull requests |
 | Frontend review | `frontend/documentation/quality/FRONTEND_REVIEW_REPORT.md` |
 
 ## Not implemented (nothing below exists)

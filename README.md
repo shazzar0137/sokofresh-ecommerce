@@ -2,7 +2,7 @@
 
 SokoFresh is a Kenyan online grocery marketplace. Customers will order fresh produce and groceries from named farms and suppliers, pay with M-Pesa, and receive same-day delivery.
 
-> **Current phase: Phase 3 (Foundations).** The backend and frontend foundations are on `main` (PR #1, merged 2026-11-27). The independent Phase 3 integration review is in progress on branch `fix/phase-3-integration-review` (PR #2); Phase 4 has not started. See `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md`.
+> **Current phase: Phase 3 (Foundations).** The backend and frontend foundations are on `main` (PR #1, merged 2026-11-27). The Phase 3 integration review is complete and its corrections are merged (PR #2, 2026-11-27); Phase 4 (catalogue) waits for the owner's go-ahead. See `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md`.
 > Approved stack: Next.js 16 + TypeScript frontend, Django 6 + DRF backend, PostgreSQL (Neon), Django admin for staff. See `docs/architecture/SYSTEM_ARCHITECTURE.md`. There are no customer-facing features yet (storefront features start in Phase 4).
 
 ## Repository layout

@@ -4,7 +4,9 @@ _Reviewer: Project Architect (this session) with six independent review agents a
 
 ## 0. Approval status
 
-**CORRECTIONS COMPLETE: RECOMMENDED FOR THE OWNER'S APPROVAL. Not merged; Phase 4 not started.**
+**APPROVED FOR DEVELOPMENT.** The owner reviewed this report and merged PR #2 on 2026-11-27 (15:13 Nairobi, merge commit `809964b`). Phase 4 has not started; it waits for the owner's go-ahead.
+
+_At the time of writing: corrections complete and recommended for approval; not merged._
 
 - All six independent reviews reported (§1). No Critical findings.
 - Every High finding that can be fixed in code before deployment is fixed and independently re-reviewed (§5, §8).

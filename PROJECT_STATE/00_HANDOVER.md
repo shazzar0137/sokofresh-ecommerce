@@ -1,12 +1,12 @@
 # 00 Handover
 
-_Last updated: 2026-11-27 afternoon (Phase 3 merged to `main` via PR #1; integration-review corrections on `fix/phase-3-integration-review`, PR #2, **not merged**)_
+_Last updated: 2026-11-27 evening (Phase 3 closed: PR #1 and PR #2 merged; `main` = `809964b`)_
 
-> **Integration quality gate: corrections done, awaiting the owner.** Review: `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md` (status and evidence there). Six independent reviewers reported; all High findings in scope are fixed and re-reviewed on PR #2. **Do not merge PR #2 or start Phase 4 until the owner has reviewed the report.** Deployment blockers remain open by design (KI-007, KI-012 to KI-015).
+> **Phase 3 integration gate: passed for development.** The owner merged PR #2 (2026-11-27 15:13 Nairobi) after the review (`docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md`). **Not approved for deployment:** KI-007 and KI-012 to KI-015 remain open by design.
 
-> **GitHub:** Claude can push feature branches (Claude GitHub App). The owner merges by pull request. `main` still has no branch protection (KI-020): owner action, steps in the review report §7.
+> **GitHub:** Claude can push feature branches (Claude GitHub App). The owner merges by pull request. `main` is protected by the ruleset "Protect main" (no deletion, no force push, PR required, 0 approvals); it currently requires only *Secret scan (gitleaks)*, so the other seven checks still need adding (KI-020).
 
-> **Decisions needed before Phase 4:** KI-011 (customer deletion vs phone constraint), KI-013 (admin static files), and the server-to-server design for SSR calls (KI-022).
+> **Before Phase 4:** the owner's go-ahead. KI-011 is decided (D-055) and is implemented as the first Phase 4 backend task. KI-022 is decided in the Phase 4 design. KI-013 waits until Phase 8.
 
 ## Continuity rule
 
@@ -45,12 +45,13 @@ Authoritative current architecture: `docs/architecture/SYSTEM_ARCHITECTURE.md`. 
 - Phase 2: research record (+ addenda), requirements baseline v0.3, frontend analysis (accepted, amended), backend analysis (accepted with amendments), consolidated proposal (approved), ADR-0001 to ADR-0013, approved roadmap and testing strategy.
 - Phase 3 backend (merged): Django 6.1.3 with uv, settings split, ten apps, phone-based custom user model before the first migration, role groups, allauth headless phone-code sign-in, RFC 9457 errors, `/api/v1/health`, generated contract with drift check, outbound-HTTP allow list, log redaction; independent backend review (`backend/documentation/quality/BACKEND_REVIEW_REPORT.md`).
 - Phase 3 frontend (merged): Next.js 16.4.6 App Router, design tokens from the PDF/Figma, foundation components, typed API client, MSW, security headers, same-origin rewrites; independent frontend review (`frontend/documentation/quality/FRONTEND_REVIEW_REPORT.md`).
-- Phase 3 integration review (2026-11-27, PR #2): 6 independent reviewers + re-review; fixes for production CSRF behind the rewrite, admin login attempt limits and MFA start-up gate, extra password routes, settings validation, CI path filters, a real-stack CI job, contract and coverage gaps. Latest results: backend 272 tests, 96% coverage; frontend 360 Vitest + 53 Playwright; real-stack smoke all checks passing; all four workflows green on GitHub.
+- Phase 3 integration review (2026-11-27, PR #2, merged): 6 independent reviewers + re-review; fixes for production CSRF behind the rewrite, admin login attempt limits and MFA start-up gate, extra password routes, settings validation, CI path filters, a real-stack CI job, contract and coverage gaps. Latest results: backend 272 tests, 96% coverage; frontend 360 Vitest + 53 Playwright; real-stack smoke all checks passing; all four workflows green on GitHub.
 - ADR-0014 and D-046 confirmed by the owner (2026-11-27, D-052).
+- KI-011 decided by the owner (2026-11-27, D-055): nullable phone (unique when present) + separate hash column on account deletion.
 
 ## Outstanding
 
-- **Owner:** review the integration report and PR #2; enable branch protection on `main` (KI-020); create the Neon development project; KRA PIN and ODPC registration (coming soon); real dispatch point; choose the delivery partner; Google Cloud billing account for Maps; slot times and cut-offs for slot areas. Accountant check of retention: future update.
+- **Owner:** add the seven remaining required checks to the "Protect main" ruleset (KI-020); give the go-ahead for Phase 4; create the Neon development project; KRA PIN and ODPC registration (coming soon); real dispatch point; choose the delivery partner; Google Cloud billing account for Maps; slot times and cut-offs for slot areas. Accountant check of retention: future update.
 - Open known issues: see `04_KNOWN_ISSUES.md`; **KI-014 (client IP through the Next.js rewrite) and KI-007 (admin MFA) block any deployment**.
 
 ## Architectural constraints
@@ -64,7 +65,6 @@ Authoritative current architecture: `docs/architecture/SYSTEM_ARCHITECTURE.md`. 
 
 ## Next action
 
-1. Owner reviews `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md` and PR #2, then merges PR #2 if satisfied.
-2. Owner enables the `main` ruleset (review report §7) once PR #2 is merged, so all eight checks exist on `main`.
-3. Owner/Architect: decide KI-011, KI-013 and KI-022 before Phase 4.
-4. Phase 4 catalogue slice (backend API first, Schemathesis with it; then the frontend catalogue), only after the owner authorises it. Explain each new package before installing.
+1. Owner: add the seven remaining required checks to the "Protect main" ruleset (review report §7, KI-020).
+2. Owner: go-ahead for Phase 4.
+3. Phase 4, in order: implement D-055 (KI-011: user phone nullable + hash column, migration and tests) before any table references users; decide KI-022 in the Phase 4 design; then the catalogue slice (backend API first, Schemathesis with it; then the frontend catalogue). Explain each new package before installing.

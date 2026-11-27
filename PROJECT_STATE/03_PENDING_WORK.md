@@ -1,16 +1,19 @@
 # 03 Pending Work
 
-_Updated 2026-11-27 afternoon. Phase 3 on `main` (PR #1); integration-review corrections on PR #2 (not merged)._
+_Updated 2026-11-27 evening. Phase 3 closed (PR #1 and PR #2 merged). Phase 4 awaiting the owner's go-ahead._
 
 ## Owner decisions and actions
 - [x] Go-ahead for Phase 3 (Foundations) (2026-11-26).
 - [x] Claude GitHub App installed; branch pushed; CI green (2026-11-27).
 - [x] `feature/phase-3-foundations` merged to `main` by the owner (PR #1, 2026-11-27).
-- [ ] **Review** `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md` and PR #2 (`fix/phase-3-integration-review`); merge PR #2 if satisfied.
-- [ ] After PR #2 is merged: enable the `main` ruleset with the eight required checks (KI-020; steps in the review report §7).
+- [x] Reviewed the integration report and merged PR #2 (2026-11-27).
+- [x] Ruleset "Protect main" created (no deletion, no force push, PR required).
+- [ ] Add the seven remaining required checks to "Protect main" (KI-020; review report §7).
+- [ ] Go-ahead for Phase 4.
 - [x] Local folder updated with `git pull`; bundle deleted (KI-021, 2026-11-27).
 - [x] ADR-0014 (items 1–21) and D-046 confirmed by the owner (2026-11-27, D-052).
-- [ ] Decide KI-011 (customer deletion vs phone constraint) **before Phase 4**.
+- [x] KI-011 decided (D-055, 2026-11-27): nullable phone + separate hash column.
+- [ ] Phase 4, first backend task: implement D-055 (migration, constraints, tests) before any table references users.
 - [ ] Decide KI-013 (admin static files in production, e.g. WhiteNoise).
 - [ ] Decide KI-022 (how server-rendered pages call Django: throttling and HTTPS) in the Phase 4 design.
 - [x] Independent backend review and corrections (2026-11-27, `backend/documentation/quality/BACKEND_REVIEW_REPORT.md`).
