@@ -91,16 +91,65 @@ def test_customer_promoted_to_staff_keeps_no_admin_access(client):
     assert client.get(f"{ADMIN}accounts/user/").status_code == 302
 
 
-def test_headless_password_login_does_not_open_admin(client):
-    """RSEC-1 (related): allauth's API login must not bypass the admin login page."""
+def test_headless_password_login_is_not_available(client):
+    """RSEC-1 / BSEC-2: allauth's API password login is shadowed (404), so staff
+    passwords can only be tried on the admin login page, which limits attempts."""
     User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
     response = client.post(
         "/_allauth/browser/v1/auth/login",
         {"phone": "+254712345678", "password": "a-long-staff-password-1"},
         content_type="application/json",
     )
-    assert response.status_code in (200, 400, 401)
+    assert response.status_code == 404
+    assert "_auth_user_id" not in client.session
     assert client.get(f"{ADMIN}accounts/user/").status_code == 302
+
+
+def _admin_login(client, phone="0712345678", password="wrong-password-0000", **extra):  # noqa: S107 - test value
+    return client.post(f"{ADMIN}login/", {"username": phone, "password": password}, **extra)
+
+
+def test_admin_login_blocks_a_phone_after_five_failed_passwords(client):
+    """BSEC-1: 40 wrong passwords used to be followed by a successful login."""
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    statuses = [_admin_login(client).status_code for _ in range(5)]
+    assert statuses == [200] * 5  # the form, with "please enter a correct ..." errors
+    # Even the right password is refused while the phone number is blocked.
+    response = _admin_login(client, password="a-long-staff-password-1")
+    assert response.status_code == 429
+    assert "_auth_user_id" not in client.session
+
+
+def test_admin_login_blocks_an_ip_guessing_across_many_phones(client):
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    statuses = [_admin_login(client, phone=f"07120000{i:02d}").status_code for i in range(11)]
+    assert statuses == [200] * 10 + [429]
+    # A different address is not affected by that IP's block.
+    response = _admin_login(client, password="a-long-staff-password-1", REMOTE_ADDR="198.51.100.7")
+    assert response.status_code == 302
+
+
+def test_admin_login_still_works_after_a_few_typos(client):
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    for _ in range(4):
+        assert _admin_login(client).status_code == 200
+    response = _admin_login(client, password="a-long-staff-password-1")
+    assert response.status_code == 302
+    assert client.session["sokofresh_admin_password_login"] is True
+
+
+def test_successful_admin_logins_are_not_counted(client):
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    for _ in range(8):
+        assert _admin_login(client, password="a-long-staff-password-1").status_code == 302
+        client.logout()
+
+
+def test_admin_login_page_still_loads_when_blocked(client):
+    User.objects.create_superuser("0712345678", password="a-long-staff-password-1")
+    for _ in range(5):
+        _admin_login(client)
+    assert client.get(f"{ADMIN}login/").status_code == 200
 
 
 def test_signing_in_elsewhere_removes_the_admin_flag(admin_client):

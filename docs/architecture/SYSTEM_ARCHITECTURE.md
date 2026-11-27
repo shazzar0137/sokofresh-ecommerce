@@ -1,6 +1,6 @@
 # System Architecture (Current, Approved)
 
-_Status: **Approved baseline, 2026-11-26.** Decision record and full reasoning: `TECHNICAL_ARCHITECTURE_PROPOSAL_2026-11.md`. Decisions: ADR-0001 to ADR-0013. Nothing below is implemented yet._
+_Status: **Approved baseline, 2026-11-26.** Decision record and full reasoning: `TECHNICAL_ARCHITECTURE_PROPOSAL_2026-11.md`. Decisions: ADR-0001 to ADR-0014. Implemented so far: the Phase 3 foundations (both applications, the shared contract, CI); the business features below start in Phase 4. What exists is recorded in `PROJECT_STATE/01_CURRENT_STATE.md`._
 
 ## 1. Big picture
 

@@ -16,6 +16,12 @@ DISABLED_ALLAUTH_ROUTES = (
     "account/email",
     "account/password/change",
     "auth/email/verify",
+    # Password sign-in and password re-authentication: only staff have
+    # passwords, and staff sign in on the admin login page, which limits
+    # attempts (and gets MFA in Phase 5). These two would be a second,
+    # unthrottled-by-us place to guess staff passwords (finding BSEC-2).
+    "auth/login",
+    "auth/reauthenticate",
     "auth/email/verify/resend",
     "auth/password/request",
     "auth/password/reset",

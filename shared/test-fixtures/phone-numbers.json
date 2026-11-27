@@ -9,7 +9,9 @@
     {"input": "0700000001", "e164": "+254700000001", "note": "070 range"},
     {"input": "0110123456", "e164": "+254110123456", "note": "011 prefix (newer Safaricom range)"},
     {"input": "0100123456", "e164": "+254100123456", "note": "010 prefix"},
-    {"input": "0757-000-001", "e164": "+254757000001", "note": "dashes"}
+    {"input": "0757-000-001", "e164": "+254757000001", "note": "dashes"},
+    {"input": "0180123456", "e164": "+254180123456", "note": "018 range (mobile per libphonenumber)"},
+    {"input": "0146123456", "e164": "+254146123456", "note": "014 range, last mobile block"}
   ],
   "invalid": [
     {"input": "", "note": "empty"},
@@ -18,6 +20,10 @@
     {"input": "07123456789", "note": "too long"},
     {"input": "0201234567", "note": "Nairobi landline, not mobile"},
     {"input": "+255712345678", "note": "Tanzanian mobile"},
-    {"input": "+14155550100", "note": "US number"}
+    {"input": "+14155550100", "note": "US number"},
+    {"input": "0150123456", "note": "015 range: not assigned to mobile (API-4)"},
+    {"input": "0190123456", "note": "019 range: not assigned to mobile (API-4)"},
+    {"input": "0109123456", "note": "0109 block: not mobile (API-4)"},
+    {"input": "0122123456", "note": "0122 block: not mobile (API-4)"}
   ]
 }

@@ -1,5 +1,5 @@
 # Frontend continuous integration (Phase 3).
-# Runs on every push and pull request that touches the frontend, the shared
+# Runs on every pull request, and on pushes that touch the frontend, the shared
 # contract or fixtures, or this workflow. Nothing here deploys anywhere.
 name: Frontend CI
 
@@ -10,12 +10,9 @@ on:
       - "shared/contracts/**"
       - "shared/test-fixtures/**"
       - ".github/workflows/frontend-ci.yml"
+  # No path filter on pull requests: a workflow skipped by a path filter never
+  # reports, so its checks could not be "required" on main (review QA-2).
   pull_request:
-    paths:
-      - "frontend/**"
-      - "shared/contracts/**"
-      - "shared/test-fixtures/**"
-      - ".github/workflows/frontend-ci.yml"
   workflow_dispatch:
 
 permissions:
@@ -23,7 +20,8 @@ permissions:
 
 concurrency:
   group: frontend-ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a run on main, so every main commit keeps a CI result (QA-8).
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 defaults:
   run:

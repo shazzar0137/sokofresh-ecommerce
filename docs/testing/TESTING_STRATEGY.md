@@ -27,7 +27,7 @@ _Status: **Approved 2026-11-26** (architecture proposal §10). Replaces `TESTING
 Shared fixtures: `shared/test-fixtures/` (phone numbers, sample catalogue) used by both apps.
 
 ## CI (GitHub Actions)
-Every push: frontend lint, type-check, unit/component tests; backend lint and pytest with a PostgreSQL service container; OpenAPI drift check; Schemathesis; dependency and secret scans. Main branch and releases: end-to-end against the real stack.
+Every push: frontend lint, type-check, unit/component tests; backend lint and pytest with a PostgreSQL service container; OpenAPI drift check; dependency and secret scans; a real-stack smoke test (Django behind `next start`, `tests/end-to-end/real-stack-smoke.sh`) on every pull request and on `main`. Schemathesis is **deferred to Phase 4** and time-machine to Phase 5–6 (ADR-0014): neither is installed yet. Main branch and releases: full end-to-end flows against the real stack as features arrive.
 
 ## Ownership
 Frontend conversation: frontend tests. Backend conversation: backend and contract tests. Architect: whole-product tests, CI rules and release gates.

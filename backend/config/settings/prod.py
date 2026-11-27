@@ -6,6 +6,7 @@ misconfigured server fails safely instead of running insecurely.
 """
 
 import re
+from urllib.parse import urlsplit
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
@@ -15,21 +16,63 @@ from .base import ADMIN_URL, SECRET_KEY, SMS_BACKEND, env
 
 DEBUG = False
 
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
+ALLOWED_HOSTS = [host.strip() for host in env.list("DJANGO_ALLOWED_HOSTS") if host.strip()]
 if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS must list the site's host names.")
+# "*" accepts any Host header and ".example.com" any sub-domain; production
+# lists exact host names only (finding BSEC-4).
+if any(host == "*" or host.startswith(".") for host in ALLOWED_HOSTS):
+    raise ImproperlyConfigured(
+        "DJANGO_ALLOWED_HOSTS must list exact host names (no '*', no leading '.')."
+    )
+
+
+def _is_exact_https_origin(value: str) -> bool:
+    """True for 'https://host' or 'https://host:port' and nothing looser.
+
+    Findings BSEC-6 / ARC-9: a regex alone accepted 'https://.', port 99999 and
+    ':443' (browsers never send the default port, so it would never match).
+    """
+    if value != value.strip().lower():
+        return False
+    try:
+        parts = urlsplit(value)
+        port = parts.port
+    except ValueError:  # malformed, or port outside 0-65535
+        return False
+    host = parts.hostname or ""
+    labels = host.split(".")
+    return (
+        parts.scheme == "https"
+        and value == f"https://{parts.netloc}"  # no path, query, fragment or trailing "/"
+        and "@" not in parts.netloc
+        and len(labels) >= 2
+        and all(re.fullmatch(r"[a-z0-9]([a-z0-9-]*[a-z0-9])?", label) for label in labels)
+        and port not in (0, 443)
+    )
+
 
 # The browser reaches Django through the Next.js rewrite (ADR-0011 item 3), so
 # Django sees its own host name but the browser's Origin (the storefront). The
 # storefront origin must be trusted explicitly, or every sign-in POST fails the
 # CSRF origin check (Phase 3 integration review INT-1, contract point F-8).
-CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
-if not CSRF_TRUSTED_ORIGINS or not all(
-    re.fullmatch(r"https://[a-z0-9.-]+(:[0-9]{1,5})?", origin) for origin in CSRF_TRUSTED_ORIGINS
-):
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])]
+if not CSRF_TRUSTED_ORIGINS or not all(map(_is_exact_https_origin, CSRF_TRUSTED_ORIGINS)):
     raise ImproperlyConfigured(
         "DJANGO_CSRF_TRUSTED_ORIGINS must list the storefront origin(s), for example "
-        "'https://www.sokofresh.co.ke' (https, lower case, no path, no wildcard)."
+        "'https://www.sokofresh.co.ke' (https, lower case, no path, no wildcard, "
+        "no ':443')."
+    )
+
+# D-031 requires MFA for the two admin users. Admin MFA arrives in Phase 5
+# (KI-007); until then the admin login has only a password and an attempt limit.
+# Production refuses to start unless the owner has explicitly accepted that
+# risk for this deployment (finding BSEC-1). Remove this switch with Phase 5.
+if not env.bool("DJANGO_ACCEPT_ADMIN_WITHOUT_MFA", default=False):
+    raise ImproperlyConfigured(
+        "Admin two-step sign-in (MFA, D-031) is not built yet (Phase 5). Set "
+        "DJANGO_ACCEPT_ADMIN_WITHOUT_MFA=true only if the owner accepts password-only "
+        "admin sign-in for this deployment (see KI-007)."
     )
 
 # Same rules as Django's security.W009 check, enforced at start-up.

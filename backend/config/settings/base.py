@@ -176,6 +176,9 @@ ACCOUNT_RATE_LIMITS = {
     "request_login_code": "30/m/ip,3/10m/key,10/d/key",
     "login": "30/m/ip",
     "change_phone": "1/m/user,3/d/user",
+    # Failed Django admin password logins (apps/core/admin_site.py, BSEC-1):
+    # per IP and per phone number. Two admins (D-031) need far fewer than this.
+    "admin_login_failed": "10/m/ip,30/h/ip,5/15m/key",
 }
 HEADLESS_ONLY = True
 HEADLESS_CLIENTS = ("browser",)

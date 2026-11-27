@@ -7,8 +7,16 @@ production must trust the storefront origin explicitly. These tests reproduce
 the headers measured from a real `next start` in front of Django.
 """
 
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 from django.test import Client, override_settings
+
+from tests.integration.test_settings import PROD_ENV
 
 BACKEND_HOST = "backend.internal"
 STOREFRONT = "https://www.sokofresh.example"
@@ -82,3 +90,62 @@ def test_a_foreign_origin_is_still_refused():
         },
     )
     assert response.status_code == 403
+
+
+# ARC-2 / QA-12: the tests above set CSRF_TRUSTED_ORIGINS themselves, so they
+# pass even if prod.py forgets it. This one loads the real production settings
+# in a fresh process and runs Django's own CSRF and host checks on a request
+# shaped exactly like one arriving through the Next.js rewrite.
+_PROD_CSRF_SCRIPT = r"""
+import json
+import django
+django.setup()
+from django.middleware.csrf import CsrfViewMiddleware, _get_new_csrf_string, _mask_cipher_secret
+from django.test import RequestFactory
+
+secret = _get_new_csrf_string()
+results = {}
+for name, origin in [("storefront", "https://www.sokofresh.example"),
+                     ("foreign", "https://evil.example")]:
+    request = RequestFactory().post(
+        "/_allauth/browser/v1/auth/code/request",
+        data="{}",
+        content_type="application/json",
+        HTTP_HOST="api.sokofresh.example",
+        HTTP_X_FORWARDED_HOST="www.sokofresh.example",
+        HTTP_X_FORWARDED_PROTO="https",
+        HTTP_ORIGIN=origin,
+        HTTP_REFERER=origin + "/sign-in",
+        HTTP_X_CSRFTOKEN=_mask_cipher_secret(secret),
+    )
+    request.COOKIES["csrftoken"] = secret
+    middleware = CsrfViewMiddleware(lambda r: None)
+    response = middleware.process_view(request, lambda r: None, (), {})
+    results[name] = {
+        "secure": request.is_secure(),
+        "host": request.get_host(),
+        "csrf": "passed" if response is None else response.status_code,
+    }
+print(json.dumps(results))
+"""
+
+
+def test_real_production_settings_accept_the_storefront_through_the_rewrite():
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("DJANGO_", "SMS_"))}
+    env.update(PROD_ENV)
+    result = subprocess.run(  # noqa: S603 - fixed script, test only
+        [sys.executable, "-c", _PROD_CSRF_SCRIPT],
+        cwd=Path(__file__).resolve().parents[2],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
+    results = json.loads(result.stdout)
+    assert results["storefront"] == {
+        "secure": True,
+        "host": "api.sokofresh.example",
+        "csrf": "passed",
+    }
+    assert results["foreign"]["csrf"] == 403

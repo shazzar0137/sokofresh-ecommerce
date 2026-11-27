@@ -34,6 +34,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .coverage
+.coverage.*
 backend/staticfiles/
 
 # --- Build and coverage output ---

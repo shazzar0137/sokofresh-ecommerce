@@ -57,6 +57,9 @@ select = ["E", "F", "I", "B", "UP", "DJ", "S", "T20", "BLE"]
 # with a minimum, excluding migrations, tests and server entry points.
 [tool.coverage.run]
 source = ["apps", "config"]
+branch = true
+# Also measure the production settings, which tests load in subprocesses (ARC-8, QA-5).
+patch = ["subprocess"]
 omit = ["*/migrations/*", "*/tests/*", "config/wsgi.py", "config/asgi.py", "config/settings/dev.py"]
 
 [tool.coverage.report]

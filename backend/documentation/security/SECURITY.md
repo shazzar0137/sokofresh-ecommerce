@@ -1,19 +1,20 @@
 # Backend security (as implemented)
 
-_Updated 2026-11-26 (Phase 3, after the independent review and corrections: `../quality/BACKEND_REVIEW_REPORT.md`). Architecture: `docs/architecture/TECHNICAL_ARCHITECTURE_PROPOSAL_2026-11.md` §9 (OWASP Top 10, OWASP API Security Top 10, Kenya Data Protection Act, 2019). This file lists what the code does **now**, how it is tested, and what is still missing. Adding a control is not the same as proving it: each "Tested by" entry is an automated test that ran and passed._
+_Updated 2026-11-27 (Phase 3 integration review corrections: `docs/reviews/PHASE_3_INDEPENDENT_REVIEW.md`; earlier review: `../quality/BACKEND_REVIEW_REPORT.md`). Architecture: `docs/architecture/TECHNICAL_ARCHITECTURE_PROPOSAL_2026-11.md` §9 (OWASP Top 10, OWASP API Security Top 10, Kenya Data Protection Act, 2019). This file lists what the code does **now**, how it is tested, and what is still missing. Adding a control is not the same as proving it: each "Tested by" entry is an automated test that ran and passed._
 
 ## Controls in place
 
 | Area | Control | Tested by |
 |---|---|---|
-| Secrets | All secrets from environment variables; `.env`, database dumps and local tool settings git-ignored; `.env.example` holds no real values | Manual history scans (2026-11-26); gitleaks workflow on every push (not yet run on GitHub) |
-| Production fails safe | `prod.py` refuses to start without `DJANGO_ALLOWED_HOSTS`, `DJANGO_TRUSTED_PROXY_COUNT` or `DJANGO_CSRF_TRUSTED_ORIGINS` (the storefront origin(s): https, no path, no wildcard; needed because the browser reaches Django through the Next.js rewrite); with a secret key shorter than 50 characters, with fewer than 5 different characters, or with a dev/test/`django-insecure` prefix; with an admin path that is not like `staff-x7k2/` (or contains `admin`); or with any SMS backend marked `dev_only` or not importable | `tests/integration/test_settings.py` (refusal cases); `tests/security/test_rewrite_csrf.py` (CSRF through the rewrite) |
+| Secrets | All secrets from environment variables; `.env`, database dumps and local tool settings git-ignored; `.env.example` holds no real values | Manual history scans (2026-11-26); gitleaks workflow on every push and pull request (green on GitHub since 2026-11-27) |
+| Production fails safe | `prod.py` refuses to start without `DJANGO_ALLOWED_HOSTS` (exact names: no `*`, no leading `.`), `DJANGO_TRUSTED_PROXY_COUNT` or `DJANGO_CSRF_TRUSTED_ORIGINS` (the storefront origin(s), parsed with `urllib`: https, lower case, a real host name, valid port other than 443, no path, user or wildcard; needed because the browser reaches Django through the Next.js rewrite); without `DJANGO_ACCEPT_ADMIN_WITHOUT_MFA=true` while admin MFA is not built (D-031, KI-007); with a secret key shorter than 50 characters, with fewer than 5 different characters, or with a dev/test/`django-insecure` prefix; with an admin path that is not like `staff-x7k2/` (or contains `admin`); or with any SMS backend marked `dev_only` or not importable | `tests/integration/test_settings.py` (refusal and acceptance cases); `tests/security/test_rewrite_csrf.py` (CSRF through the rewrite, including one test that loads the real `prod.py`); `tests/end-to-end/real-stack-smoke.sh` in CI (real Django with production settings behind `next start`) |
 | HTTPS and cookies | Production: SSL redirect, HSTS (1 hour to start), `Secure` session and CSRF cookies, proxy TLS header | `test_production_cookies_and_https`; `check --deploy` |
 | Django deploy checklist | `manage.py check --deploy --fail-level WARNING` passes with production settings (W005/W021 silenced deliberately, ADR-0014 #9) | `test_production_settings_pass_the_deploy_checklist` |
 | Sessions | HttpOnly, SameSite=Lax session cookie; 14-day lifetime | `test_core_security_defaults` |
 | CSRF | Django CSRF on every state-changing request, including allauth sign-in | `tests/security/test_security_baseline.py` |
 | Authentication | Phone + one-time code via allauth; codes 6 digits, 5 minutes, 3 attempts, single use; session key rotated at sign-in; no customer passwords; inactive accounts get no code | `apps/accounts/tests/test_phone_login.py` |
-| Staff sign-in | **Staff and superusers cannot sign in with an SMS code** (SIM-swap risk); only the Django admin password login works for them | `test_staff_cannot_sign_in_with_an_sms_code`, `test_staff_can_still_sign_in_to_admin_with_password` |
+| Staff sign-in | **Staff and superusers cannot sign in with an SMS code** (SIM-swap risk); only the Django admin password login works for them. allauth's API password login (`auth/login`) and password re-authentication (`auth/reauthenticate`) are shadowed (404), so the admin login page is the only place to try a staff password (BSEC-2) | `test_staff_cannot_sign_in_with_an_sms_code`, `test_staff_can_still_sign_in_to_admin_with_password`, `test_headless_password_login_is_not_available`, `test_unused_allauth_features_are_unavailable` |
+| Admin login attempts | Failed admin password logins limited per IP (10/min, 30/hour) and per phone number (5 per 15 min) in the shared cache; a blocked login gets 429 even with the right password; successful logins are not counted (BSEC-1) | `test_admin_login_blocks_…`, `test_admin_login_still_works_after_a_few_typos`, `test_successful_admin_logins_are_not_counted` |
 | Sign-up | Closed until Phase 5; same 403 answer for new and existing numbers, no account created | `test_sign_up_is_closed_and_reveals_nothing` |
 | SMS abuse / cost | 3 code requests per number per 10 min, 10 per day, 30/min per IP; invalid and non-Kenyan numbers refused before any SMS; unknown numbers get no SMS | `test_phone_login.py` |
 | Account enumeration | Same response for known and unknown numbers, including when the SMS provider fails; sign-up closed (no new-vs-existing difference) | `test_unknown_number_…`, `test_sms_provider_failure_gives_the_same_answer_…`, `test_sign_up_is_closed_…` |
@@ -34,13 +35,12 @@ _Updated 2026-11-26 (Phase 3, after the independent review and corrections: `../
 
 | Gap | Plan |
 |---|---|
-| **Django admin password login has no rate limit and no MFA yet** (SMS-code sign-in for staff is now refused, so the password is the only factor). allauth's admin protection and MFA need allauth's HTML views, which `HEADLESS_ONLY = True` turns off | Phase 5: MFA (TOTP) for staff and a throttled admin login; decision recorded then. **Do not deploy before this is done** |
+| **Django admin has no MFA yet** (the password is the only factor; attempts are now limited, see above). allauth's MFA needs allauth's HTML views, which `HEADLESS_ONLY = True` turns off. Production refuses to start unless `DJANGO_ACCEPT_ADMIN_WITHOUT_MFA=true` records the owner's acceptance | Phase 5: MFA (TOTP) for staff (D-031); then remove the switch. **Do not deploy before this is done**, unless the owner explicitly accepts the risk |
 | Admin static files (CSS/JS) not served in production | Decide in Phase 8 (e.g. WhiteNoise needs owner approval as a new package) |
 | Timing difference between known and unknown numbers once a real SMS provider is called synchronously | Phase 5: send through a constant-time path |
 | Proxy setup must overwrite `X-Forwarded-Proto` and the origin must not be reachable directly | Phase 8 hosting checklist |
 | No real SMS provider (production refuses to send; sign-in requests still get the normal response) | Phase 5: Africa's Talking backend via `outbound_client()` + Cloudflare Turnstile on code requests |
 | Account creation at checkout not enabled (sign-up closed) | Phase 5 (ADR-0011 item 5) |
-| Secret scan and CI not yet run on GitHub | Runs on the first push of the branch |
 | Error tracking (Sentry with personal-data scrubbing) | Phase 8 |
 | Threat model and data classification | Phase 3/4 security task (`PROJECT_STATE/03_PENDING_WORK.md`) |
 | HSTS raised to one year; subdomains/preload | After HTTPS is stable on the real domain |

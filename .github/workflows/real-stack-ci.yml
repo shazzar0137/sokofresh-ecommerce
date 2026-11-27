@@ -1,0 +1,102 @@
+# Real-stack integration (Phase 3 integration review QA-3 / ARC-6).
+# Runs the real Django backend with the PRODUCTION settings behind the real
+# Next.js server (`next start`) and checks the same-origin rewrite, CSRF,
+# cookies and the allauth paths the frontend relies on
+# (tests/end-to-end/real-stack-smoke.sh). Nothing here deploys anywhere, and
+# every value below is a throw-away CI value, not a real secret.
+name: Real-stack CI
+
+on:
+  push:
+    branches: [main]
+  # Every pull request (no path filter, so the check can be required; QA-2).
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: real-stack-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  real-stack:
+    name: Real stack (Django + Next.js)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sokofresh
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: sokofresh_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sokofresh"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      BACKEND_ORIGIN: http://127.0.0.1:8000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3999
+      # Production settings with CI-only values (config/settings/prod.py).
+      DATABASE_URL: postgres://sokofresh:ci-only-password@localhost:5432/sokofresh_ci
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      DJANGO_ALLOWED_HOSTS: 127.0.0.1
+      DJANGO_ADMIN_URL: staff-ci-only/
+      DJANGO_TRUSTED_PROXY_COUNT: "0"
+      DJANGO_CSRF_TRUSTED_ORIGINS: https://www.sokofresh.example
+      DJANGO_ACCEPT_ADMIN_WITHOUT_MFA: "true"
+    steps:
+      # Actions are pinned to full commit SHAs (supply-chain safety); the tag is in the comment.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          working-directory: backend
+          enable-cache: true
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install backend dependencies (exactly as locked)
+        working-directory: backend
+        run: uv sync --locked
+      - name: Install frontend dependencies (exactly as locked, no install scripts)
+        working-directory: frontend
+        run: npm ci --ignore-scripts
+      - name: Build the storefront
+        working-directory: frontend
+        run: npm run build
+      # A random secret per run: never stored, never reused.
+      - name: Start Django (production settings) and Next.js
+        run: |
+          DJANGO_SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(60))')"
+          echo "::add-mask::$DJANGO_SECRET_KEY"
+          export DJANGO_SECRET_KEY
+          (cd backend && uv run python manage.py migrate --noinput)
+          (cd backend && nohup uv run python manage.py runserver 127.0.0.1:8000 --noreload > "$RUNNER_TEMP/django.log" 2>&1 &)
+          (cd frontend && nohup npx next start -p 3999 -H 127.0.0.1 > "$RUNNER_TEMP/next.log" 2>&1 &)
+          for _ in $(seq 1 60); do
+            if curl -fsS -H "X-Forwarded-Proto: https" http://127.0.0.1:3999/api/v1/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Servers did not become ready"
+          cat "$RUNNER_TEMP/django.log" "$RUNNER_TEMP/next.log"
+          exit 1
+      - name: Real-stack checks
+        env:
+          STOREFRONT_URL: http://127.0.0.1:3999
+          SITE_ORIGIN: https://www.sokofresh.example
+        run: tests/end-to-end/real-stack-smoke.sh
+      - name: Server logs
+        if: always()
+        run: cat "$RUNNER_TEMP/django.log" "$RUNNER_TEMP/next.log" || true
